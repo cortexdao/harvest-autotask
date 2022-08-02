@@ -4,6 +4,8 @@ const {
   DefenderRelayProvider
 } = require('defender-relay-client/lib/ethers');
 
+const { LP_ACCOUNT_ADDRESS, LP_ACCOUNT_ABI } = require("./constants");
+
 exports.main = async function(signer) {
 }
 
