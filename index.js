@@ -6,7 +6,7 @@ const {
 
 const { LP_ACCOUNT_ADDRESS, LP_ACCOUNT_ABI } = require("./constants");
 
-exports.main = async function(signer) {
+exports.main = async (signer) => {
   const lpAccount = new ethers.Contract(LP_ACCOUNT_ADDRESS, LP_ACCOUNT_ABI, signer);
   const zapNames = await lpAccount.zapNames();
   const lpBalances = await Promise.all(zapNames.map(zap => lpAccount.getLpTokenBalance(zap)));
@@ -14,7 +14,7 @@ exports.main = async function(signer) {
 }
 
 // Entrypoint for the Autotask
-exports.handler = async function(event) {
+exports.handler = async (event) => {
   const provider = new DefenderRelayProvider(credentials);
   const signer = new DefenderRelaySigner(credentials, provider, { speed: 'fast' });
   return main(signer);
