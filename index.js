@@ -7,6 +7,8 @@ const {
 const { LP_ACCOUNT_ADDRESS, LP_ACCOUNT_ABI } = require("./constants");
 
 exports.main = async function(signer) {
+  const lpAccount = new ethers.Contract(LP_ACCOUNT_ADDRESS, LP_ACCOUNT_ABI, signer);
+  const zapNames = await lpAccount.zapNames();
 }
 
 // Entrypoint for the Autotask
