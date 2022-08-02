@@ -9,6 +9,8 @@ const { LP_ACCOUNT_ADDRESS, LP_ACCOUNT_ABI } = require("./constants");
 exports.main = async function(signer) {
   const lpAccount = new ethers.Contract(LP_ACCOUNT_ADDRESS, LP_ACCOUNT_ABI, signer);
   const zapNames = await lpAccount.zapNames();
+  const lpBalances = await Promise.all(zapNames.map(zap => lpAccount.getLpTokenBalance(zap)));
+  const claims = zapNames.filter((_, i) => lpBalances[i].gt(0));
 }
 
 // Entrypoint for the Autotask
