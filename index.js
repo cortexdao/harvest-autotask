@@ -7,7 +7,11 @@ const {
 const { LP_ACCOUNT_ADDRESS, LP_ACCOUNT_ABI } = require("./constants");
 
 exports.getLpBalances = async (lpAccount, zapNames) => {
-  const lpBalances = await Promise.all(zapNames.map(zap => lpAccount.getLpTokenBalance(zap)));
+  const lpBalances = await Promise.all(zapNames.map(
+    zap => lpAccount.getLpTokenBalance(zap).catch(
+      () => ethers.BigNumber.from(0)
+    )
+  ));
   return lpBalances;
 }
 
