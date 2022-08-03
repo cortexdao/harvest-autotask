@@ -1,7 +1,15 @@
 const { expect } = require("chai");
-const { getLpBalances, getClaimNames } = require("../index");
+const { impersonateAccount, setBalance } = require("@nomicfoundation/hardhat-network-helpers");
+const { getLpBalances, getClaimNames, claim } = require("../index");
 
-const { LP_ACCOUNT_ADDRESS, LP_ACCOUNT_ABI } = require("../constants");
+const {
+  LP_SAFE_ADDRESS,
+  LP_ACCOUNT_ADDRESS,
+  LP_ACCOUNT_ABI,
+  CRV_ADDRESS,
+  CVX_ADDRESS,
+  ERC20_ABI,
+} = require("../constants");
 
 describe("Harvest Autotask", () => {
   let signer;
@@ -61,6 +69,31 @@ describe("Harvest Autotask", () => {
 
       const expectedClaimNames = ["convex-susdv2", "convex-mim"];
       expect(claimNames).to.deep.equal(expectedClaimNames);
+    });
+  });
+
+  describe("claim", () => {
+    let safeSigner;
+
+    before(async () => {
+      await impersonateAccount(LP_SAFE_ADDRESS);
+      await setBalance(LP_SAFE_ADDRESS, 10n ** 18n);
+      safeSigner = await ethers.getSigner(LP_SAFE_ADDRESS);
+    });
+
+    it("should claim CRV and CVX rewards", async () => {
+      const crv = new ethers.Contract(CRV_ADDRESS, ERC20_ABI, safeSigner);
+      const cvx = new ethers.Contract(CVX_ADDRESS, ERC20_ABI, safeSigner);
+
+      // Expect non-zero change, because chai matcher cannot check for < or >
+      await expect(claim(safeSigner))
+        .to.not.changeTokenBalance(crv, LP_ACCOUNT_ADDRESS, 0)
+        .and.not.changeTokenBalance(cvx, LP_ACCOUNT_ADDRESS, 0);
+    });
+
+    it("should return a tx receipt", async () => {
+      const tx = await claim(safeSigner);
+      expect(tx).to.include.all.keys('hash', 'blockNumber', 'from', 'to', 'data');
     });
   });
 });

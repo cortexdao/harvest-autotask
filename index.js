@@ -3,8 +3,11 @@ const {
   DefenderRelaySigner,
   DefenderRelayProvider
 } = require('defender-relay-client/lib/ethers');
-
-const { LP_ACCOUNT_ADDRESS, LP_ACCOUNT_ABI } = require("./constants");
+const {
+  LP_SAFE_ADDRESS,
+  LP_ACCOUNT_ADDRESS,
+  LP_ACCOUNT_ABI
+} = require("./constants");
 
 exports.getLpBalances = async (lpAccount, zapNames) => {
   const lpBalances = await Promise.all(zapNames.map(
@@ -24,12 +27,19 @@ exports.getClaimNames = (zapNames, lpBalances) => {
   return claimNames;
 }
 
-exports.main = async (signer) => {
+exports.claim = async (signer) => {
   const lpAccount = new ethers.Contract(LP_ACCOUNT_ADDRESS, LP_ACCOUNT_ABI, signer);
 
   const zapNames = await lpAccount.zapNames();
   const lpBalances = await exports.getLpBalances(lpAccount, zapNames);
-  const claims = exports.getClaimNames(zapNames, lpBalances);
+  const claimNames = exports.getClaimNames(zapNames, lpBalances);
+
+  const tx = await lpAccount.claim(claimNames);
+
+  return tx;
+}
+
+exports.main = async (signer) => {
 }
 
 // Entrypoint for the Autotask
