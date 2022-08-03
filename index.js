@@ -16,6 +16,10 @@ exports.getLpBalances = async (lpAccount, zapNames) => {
 }
 
 exports.getClaimNames = (zapNames, lpBalances) => {
+  if (zapNames.length !== lpBalances.length) {
+    throw new Error("Invalid number of claim names or LP balances");
+  }
+
   const claimNames = zapNames.filter((_, i) => lpBalances[i].gt(0));
   return claimNames;
 }
