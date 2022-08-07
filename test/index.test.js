@@ -3,7 +3,7 @@ const {
   impersonateAccount,
   stopImpersonatingAccount,
   setBalance,
-  takeSnapshot
+  takeSnapshot,
 } = require("@nomicfoundation/hardhat-network-helpers");
 const { smock } = require("@defi-wonderland/smock");
 const { getLpBalances, getClaimNames, createClaimTx } = require("../index");
@@ -23,7 +23,7 @@ use(smock.matchers);
 describe("Harvest Autotask", () => {
   let snapshot;
   let signer;
-  let lpAccount
+  let lpAccount;
 
   beforeEach(async () => {
     snapshot = await takeSnapshot();
@@ -46,7 +46,12 @@ describe("Harvest Autotask", () => {
     });
 
     it("should return 0 balances for all unregistered zap names", async () => {
-      const zapNames = ["convex-frax", "convex-susdv2", "convex-mim", "invalid"];
+      const zapNames = [
+        "convex-frax",
+        "convex-susdv2",
+        "convex-mim",
+        "invalid",
+      ];
       const balances = await getLpBalances(lpAccount, zapNames);
       expect(balances[3]).to.equal(0);
     });
@@ -54,7 +59,9 @@ describe("Harvest Autotask", () => {
     it("should return positive balances for all registered zap names with an active position", async () => {
       const zapNames = ["convex-frax", "convex-susdv2", "convex-mim"];
       const balances = await getLpBalances(lpAccount, zapNames);
-      expect(balances).to.satisfy(balances => balances.every(balance => balance.gt(0)));
+      expect(balances).to.satisfy((balances) =>
+        balances.every((balance) => balance.gt(0))
+      );
     });
   });
 
@@ -72,7 +79,7 @@ describe("Harvest Autotask", () => {
 
     it("should throw a TypeError if balances are not BigNumbers", async () => {
       const zapNames = ["convex-frax", "convex-susdv2", "convex-mim"];
-      const balances = [0, 1, 2]
+      const balances = [0, 1, 2];
       expect(() => getClaimNames(zapNames, balances)).to.throw(TypeError);
     });
 
@@ -105,11 +112,7 @@ describe("Harvest Autotask", () => {
 
     it("should return a populated tx object", async () => {
       const tx = await createClaimTx(safeSigner);
-      expect(tx).to.include.all.keys(
-        "to",
-        "data",
-        "value",
-      );
+      expect(tx).to.include.all.keys("to", "data", "value");
     });
 
     it("should claim CRV and CVX rewards", async () => {
@@ -152,7 +155,9 @@ describe("Harvest Autotask", () => {
     it("should have sufficient gas left", async () => {
       const receipt = await main(owner);
       const { gasUsed } = receipt;
-      const { gasLimit } = await ethers.provider.getTransaction(receipt.transactionHash);
+      const { gasLimit } = await ethers.provider.getTransaction(
+        receipt.transactionHash
+      );
       const gasRemaining = gasLimit.sub(gasUsed);
       expect(gasRemaining).to.be.above(0);
     });
@@ -163,7 +168,9 @@ describe("Harvest Autotask", () => {
     });
 
     it("should call the `LpAccount` claim function", async () => {
-      const lpAccountFake = await smock.fake(LP_ACCOUNT_ABI, { address: lpAccount.address });
+      const lpAccountFake = await smock.fake(LP_ACCOUNT_ABI, {
+        address: lpAccount.address,
+      });
       lpAccountFake.claim.returns();
 
       await main(owner);
