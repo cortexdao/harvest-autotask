@@ -6,8 +6,12 @@ const {
   takeSnapshot,
 } = require("@nomicfoundation/hardhat-network-helpers");
 const { smock } = require("@defi-wonderland/smock");
-const { getLpBalances, getClaimNames, createClaimTx } = require("../index");
-const { main } = require("../index");
+const {
+  getLpBalances,
+  getClaimNames,
+  createClaimTx,
+  main,
+} = require("../src/index");
 
 const {
   LP_SAFE_ADDRESS,
@@ -16,7 +20,7 @@ const {
   CRV_ADDRESS,
   CVX_ADDRESS,
   ERC20_ABI,
-} = require("../constants");
+} = require("../src/constants");
 
 use(smock.matchers);
 
