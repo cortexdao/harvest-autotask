@@ -1,6 +1,7 @@
 const { expect, use } = require("chai");
 const {
   impersonateAccount,
+  stopImpersonatingAccount,
   setBalance,
   takeSnapshot
 } = require("@nomicfoundation/hardhat-network-helpers");
@@ -98,6 +99,10 @@ describe("Harvest Autotask", () => {
       safeSigner = await ethers.getSigner(LP_SAFE_ADDRESS);
     });
 
+    after(async () => {
+      await stopImpersonatingAccount(LP_SAFE_ADDRESS);
+    });
+
     it("should return a populated tx object", async () => {
       const tx = await createClaimTx(safeSigner);
       expect(tx).to.include.all.keys(
@@ -128,6 +133,10 @@ describe("Harvest Autotask", () => {
       await impersonateAccount(ownerAddress);
       await setBalance(ownerAddress, 10n ** 18n);
       owner = await ethers.getSigner(ownerAddress);
+    });
+
+    after(async () => {
+      await stopImpersonatingAccount(ownerAddress);
     });
 
     it("should return a tx receipt", async () => {
