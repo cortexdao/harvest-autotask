@@ -1,10 +1,12 @@
-const { expect } = require("chai");
+const { expect, use } = require("chai");
 const {
   impersonateAccount,
   setBalance,
   takeSnapshot
 } = require("@nomicfoundation/hardhat-network-helpers");
+const { smock } = require("@defi-wonderland/smock");
 const { getLpBalances, getClaimNames, createClaimTx } = require("../index");
+const { main } = require("../index");
 
 const {
   LP_SAFE_ADDRESS,
@@ -14,6 +16,8 @@ const {
   CVX_ADDRESS,
   ERC20_ABI,
 } = require("../constants");
+
+use(smock.matchers);
 
 describe("Harvest Autotask", () => {
   let snapshot;
@@ -114,10 +118,52 @@ describe("Harvest Autotask", () => {
         .to.not.changeTokenBalance(crv, LP_ACCOUNT_ADDRESS, 0)
         .and.not.changeTokenBalance(cvx, LP_ACCOUNT_ADDRESS, 0);
     });
+  });
+
+  describe("main", () => {
+    const ownerAddress = "0x893531C5E2c2af2a1F8DD03760843A3513f02AB8";
+    let owner;
+
+    before(async () => {
+      await impersonateAccount(ownerAddress);
+      await setBalance(ownerAddress, 10n ** 18n);
+      owner = await ethers.getSigner(ownerAddress);
+    });
 
     it("should return a tx receipt", async () => {
-      const tx = await claim(safeSigner);
-      expect(tx).to.include.all.keys('hash', 'blockNumber', 'from', 'to', 'data');
+      const receipt = await main(owner);
+      expect(receipt).to.include.all.keys(
+        "gasUsed",
+        "blockHash",
+        "transactionHash",
+        "blockNumber"
+      );
+    });
+
+    it("should have sufficient gas left", async () => {
+      const receipt = await main(owner);
+      const { gasUsed } = receipt;
+      const { gasLimit } = await ethers.provider.getTransaction(receipt.transactionHash);
+      const gasRemaining = gasLimit.sub(gasUsed);
+      expect(gasRemaining).to.be.above(0);
+    });
+
+    it("should execute the transaction from the safe owner", async () => {
+      const receipt = await main(owner);
+      expect(receipt.from).to.equal(ownerAddress);
+    });
+
+    it("should call the `LpAccount` claim function", async () => {
+      const lpAccountFake = await smock.fake(LP_ACCOUNT_ABI, { address: lpAccount.address });
+      lpAccountFake.claim.returns();
+
+      await main(owner);
+
+      expect(lpAccountFake.claim).to.have.called;
+    });
+
+    it("should not repay the safe owner for gas", async () => {
+      expect(await main(owner)).to.changeEtherBalance(owner, 0);
     });
   });
 });
