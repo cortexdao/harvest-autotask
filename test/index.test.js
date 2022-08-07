@@ -1,9 +1,10 @@
 const { expect } = require("chai");
-const { impersonateAccount, setBalance } = require("@nomicfoundation/hardhat-network-helpers");
-const { getLpBalances, getClaimNames, claim } = require("../index");
 const {
+  impersonateAccount,
+  setBalance,
   takeSnapshot
 } = require("@nomicfoundation/hardhat-network-helpers");
+const { getLpBalances, getClaimNames, createClaimTx } = require("../index");
 
 const {
   LP_SAFE_ADDRESS,
@@ -93,12 +94,23 @@ describe("Harvest Autotask", () => {
       safeSigner = await ethers.getSigner(LP_SAFE_ADDRESS);
     });
 
+    it("should return a populated tx object", async () => {
+      const tx = await createClaimTx(safeSigner);
+      expect(tx).to.include.all.keys(
+        "to",
+        "data",
+        "value",
+      );
+    });
+
     it("should claim CRV and CVX rewards", async () => {
       const crv = new ethers.Contract(CRV_ADDRESS, ERC20_ABI, safeSigner);
       const cvx = new ethers.Contract(CVX_ADDRESS, ERC20_ABI, safeSigner);
 
+      const tx = await createClaimTx(safeSigner);
+
       // Expect non-zero change, because chai matcher cannot check for < or >
-      await expect(claim(safeSigner))
+      await expect(safeSigner.sendTransaction(tx))
         .to.not.changeTokenBalance(crv, LP_ACCOUNT_ADDRESS, 0)
         .and.not.changeTokenBalance(cvx, LP_ACCOUNT_ADDRESS, 0);
     });
