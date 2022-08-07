@@ -1,6 +1,9 @@
 const { expect } = require("chai");
 const { impersonateAccount, setBalance } = require("@nomicfoundation/hardhat-network-helpers");
 const { getLpBalances, getClaimNames, claim } = require("../index");
+const {
+  takeSnapshot
+} = require("@nomicfoundation/hardhat-network-helpers");
 
 const {
   LP_SAFE_ADDRESS,
@@ -12,8 +15,17 @@ const {
 } = require("../constants");
 
 describe("Harvest Autotask", () => {
+  let snapshot;
   let signer;
   let lpAccount
+
+  beforeEach(async () => {
+    snapshot = await takeSnapshot();
+  });
+
+  afterEach(async () => {
+    await snapshot.restore();
+  });
 
   before(async () => {
     [signer] = await ethers.getSigners();
