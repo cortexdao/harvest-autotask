@@ -2108,13 +2108,13 @@ defender-admin-client@1.25.0:
     lodash "^4.17.19"
     node-fetch "^2.6.0"
 
-defender-autotask-client@1.25.0:
-  version "1.25.0"
-  resolved "https://registry.yarnpkg.com/defender-autotask-client/-/defender-autotask-client-1.25.0.tgz#8bfb6cb520d31192372c08fe709c580fd54af407"
-  integrity sha512-/aD0jtduQtRqv0q1X8r0g8/UggSDwiYyGd1w7VqP9y86hINm15NwTNvezr2ZqMDgZerWc+5DAZ44M8trUhHmlA==
+defender-autotask-client@^1.27.1:
+  version "1.27.1"
+  resolved "https://registry.yarnpkg.com/defender-autotask-client/-/defender-autotask-client-1.27.1.tgz#0353fb08137df27b822713d86e77671851dbfa39"
+  integrity sha512-xeAhggxl2kKOMTlsiLPsIYc88980b13D1J1yJ34rPPsywKaHgCUNC6bEtgvbBoykIPDvsscBLt3jIjB2cJhSog==
   dependencies:
     axios "^0.21.2"
-    defender-base-client "1.25.0"
+    defender-base-client "1.27.1"
     dotenv "^10.0.0"
     glob "^7.1.6"
     jszip "^3.5.0"
@@ -2130,6 +2130,16 @@ defender-base-client@1.25.0:
   version "1.25.0"
   resolved "https://registry.yarnpkg.com/defender-base-client/-/defender-base-client-1.25.0.tgz#7db9efc786391dbc3714bd411cfa18593400eb54"
   integrity sha512-42a9zEnif94mCkM1N19C+6k7R1QUqNq4FIaS/jVQ5kSJaSmv3FTmLT41/6qHXev76VYp87EyKqbDA9biGhgx/Q==
+  dependencies:
+    amazon-cognito-identity-js "^4.3.3"
+    axios "^0.21.2"
+    lodash "^4.17.19"
+    node-fetch "^2.6.0"
+
+defender-base-client@1.27.1:
+  version "1.27.1"
+  resolved "https://registry.yarnpkg.com/defender-base-client/-/defender-base-client-1.27.1.tgz#4376a5046a0546d58c2b8f3c661e2dec1fdfa87c"
+  integrity sha512-/EyzoNyEGXeD1yeudxfSTQvdM2JiFguS8COWkNDYAsIbrvRd+J8JWwkjAd2/dckrWohK3ycvay1fvWeQj0Dmhw==
   dependencies:
     amazon-cognito-identity-js "^4.3.3"
     axios "^0.21.2"
