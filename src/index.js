@@ -1,23 +1,23 @@
 const { ethers } = require("ethers");
 const {
   DefenderRelaySigner,
-  DefenderRelayProvider
-} = require('defender-relay-client/lib/ethers');
+  DefenderRelayProvider,
+} = require("defender-relay-client/lib/ethers");
 const { default: Safe, EthersAdapter } = require("@gnosis.pm/safe-core-sdk");
 const {
   LP_SAFE_ADDRESS,
   LP_ACCOUNT_ADDRESS,
-  LP_ACCOUNT_ABI
+  LP_ACCOUNT_ABI,
 } = require("./constants");
 
 exports.getLpBalances = async (lpAccount, zapNames) => {
-  const lpBalances = await Promise.all(zapNames.map(
-    zap => lpAccount.getLpTokenBalance(zap).catch(
-      () => ethers.BigNumber.from(0)
+  const lpBalances = await Promise.all(
+    zapNames.map((zap) =>
+      lpAccount.getLpTokenBalance(zap).catch(() => ethers.BigNumber.from(0))
     )
-  ));
+  );
   return lpBalances;
-}
+};
 
 exports.getClaimNames = (zapNames, lpBalances) => {
   if (zapNames.length !== lpBalances.length) {
@@ -26,17 +26,21 @@ exports.getClaimNames = (zapNames, lpBalances) => {
 
   const claimNames = zapNames.filter((_, i) => lpBalances[i].gt(0));
   return claimNames;
-}
+};
 
 exports.getSafe = async (signer) => {
-  const ethAdapter = new EthersAdapter({ ethers, signer })
-  const safe = await Safe.create({ ethAdapter, safeAddress: LP_SAFE_ADDRESS })
+  const ethAdapter = new EthersAdapter({ ethers, signer });
+  const safe = await Safe.create({ ethAdapter, safeAddress: LP_SAFE_ADDRESS });
 
   return safe;
-}
+};
 
 exports.createClaimTx = async (signer) => {
-  const lpAccount = new ethers.Contract(LP_ACCOUNT_ADDRESS, LP_ACCOUNT_ABI, signer);
+  const lpAccount = new ethers.Contract(
+    LP_ACCOUNT_ADDRESS,
+    LP_ACCOUNT_ABI,
+    signer
+  );
 
   // Get the zaps to claim from
   const zapNames = await lpAccount.zapNames();
@@ -52,7 +56,7 @@ exports.createClaimTx = async (signer) => {
   };
 
   return tx;
-}
+};
 
 exports.main = async (signer) => {
   let tx = await exports.createClaimTx(signer);
@@ -75,20 +79,26 @@ exports.main = async (signer) => {
   const receipt = await executedTx.transactionResponse?.wait();
 
   return receipt;
-}
+};
 
 // Entrypoint for the Autotask
 exports.handler = async (event) => {
   const provider = new DefenderRelayProvider(credentials);
-  const signer = new DefenderRelaySigner(credentials, provider, { speed: 'fast' });
+  const signer = new DefenderRelaySigner(credentials, provider, {
+    speed: "fast",
+  });
   return main(signer);
-}
+};
 
 // To run locally (this code will not be executed in Autotasks)
 if (require.main === module) {
-  require('dotenv').config()
-  const { API_KEY: apiKey, API_SECRET: apiSecret } = process.env;
-  exports.handler({ apiKey, apiSecret })
+  require("dotenv").config();
+  const { RELAY_API_KEY: apiKey, RELAY_API_SECRET: apiSecret } = process.env;
+  exports
+    .handler({ apiKey, apiSecret })
     .then(() => process.exit(0))
-    .catch(error => { console.error(error); process.exit(1); });
+    .catch((error) => {
+      console.error(error);
+      process.exit(1);
+    });
 }
