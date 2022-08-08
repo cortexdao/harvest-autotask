@@ -93,7 +93,7 @@ exports.handler = async (event) => {
 // To run locally (this code will not be executed in Autotasks)
 if (require.main === module) {
   require("dotenv").config();
-  const { API_KEY: apiKey, API_SECRET: apiSecret } = process.env;
+  const { RELAY_API_KEY: apiKey, RELAY_API_SECRET: apiSecret } = process.env;
   exports
     .handler({ apiKey, apiSecret })
     .then(() => process.exit(0))
