@@ -4,6 +4,23 @@ exports.LP_ACCOUNT_ADDRESS = "0xE08Ee4C1b248464aAcC5c0130247b1B9d9e6005E";
 exports.CRV_ADDRESS = "0xD533a949740bb3306d119CC777fa900bA034cd52";
 exports.CVX_ADDRESS = "0x4e3FBD56CD56c3e72c1403e103b45Db9da5B9D2B";
 
+exports.SWAPS = {
+  CRV: {
+    name: "crv-to-usdc",
+    address: exports.CRV_ADDRESS,
+    inTokenDecimals: 18n,
+    outTokenDecimals: 6n,
+    slippage: "0.05",
+  },
+  CVX: {
+    name: "cvx-to-usdc",
+    address: exports.CVX_ADDRESS,
+    inTokenDecimals: 18n,
+    outTokenDecimals: 6n,
+    slippage: "0.05",
+  },
+};
+
 exports.LP_ACCOUNT_ABI = [
   {
     "inputs": [
