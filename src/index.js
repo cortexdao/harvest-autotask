@@ -4,29 +4,10 @@ const {
   DefenderRelayProvider,
 } = require("defender-relay-client/lib/ethers");
 const { default: Safe, EthersAdapter } = require("@gnosis.pm/safe-core-sdk");
-const {
-  LP_SAFE_ADDRESS,
-  LP_ACCOUNT_ADDRESS,
-  LP_ACCOUNT_ABI,
-} = require("./constants");
+const { LP_SAFE_ADDRESS } = require("./constants");
 
-exports.getLpBalances = async (lpAccount, zapNames) => {
-  const lpBalances = await Promise.all(
-    zapNames.map((zap) =>
-      lpAccount.getLpTokenBalance(zap).catch(() => ethers.BigNumber.from(0))
-    )
-  );
-  return lpBalances;
-};
-
-exports.getClaimNames = (zapNames, lpBalances) => {
-  if (zapNames.length !== lpBalances.length) {
-    throw new Error("Invalid number of claim names or LP balances");
-  }
-
-  const claimNames = zapNames.filter((_, i) => lpBalances[i].gt(0));
-  return claimNames;
-};
+const lpaccount = require("./lpaccount");
+const { createClaimTx } = lpaccount;
 
 exports.getSafe = async (signer) => {
   const ethAdapter = new EthersAdapter({ ethers, signer });
@@ -35,38 +16,10 @@ exports.getSafe = async (signer) => {
   return safe;
 };
 
-exports.createClaimTx = async (signer) => {
-  const lpAccount = new ethers.Contract(
-    LP_ACCOUNT_ADDRESS,
-    LP_ACCOUNT_ABI,
-    signer
-  );
-
-  // Get the zaps to claim from
-  const zapNames = await lpAccount.zapNames();
-  const lpBalances = await exports.getLpBalances(lpAccount, zapNames);
-  const claimNames = exports.getClaimNames(zapNames, lpBalances);
-
-  // Create the `claim` tx object
-  const data = lpAccount.interface.encodeFunctionData("claim", [claimNames]);
-  const tx = {
-    to: lpAccount.address,
-    data,
-    value: 0,
-  };
-
-  return tx;
-};
-
-exports.main = async (signer) => {
-  let tx = await exports.createClaimTx(signer);
-
-  // Create Safe tx
-  const safe = await exports.getSafe(signer);
-
+exports.executeSafeTx = async (tx, safe) => {
   const safeTx = await safe.createTransaction(tx);
-
   const baseGas = 100000;
+
   const options = {
     // Required to short-circuit call to `estimateGasForTransactionExecution`
     // - Tries to estimate gas using the `gasPrice` set in the safe tx
@@ -76,9 +29,48 @@ exports.main = async (signer) => {
   };
 
   const executedTx = await safe.executeTransaction(safeTx, options);
-  const receipt = await executedTx.transactionResponse?.wait();
+
+  // Cannot use `?.` operator here because the autotask env uses node 12
+  // - Optional chaining with `.?` requires node 14
+  let receipt;
+  if (executedTx.transactionResponse) {
+    receipt = await executedTx.transactionResponse.wait();
+  } else {
+    receipt = undefined;
+  }
 
   return receipt;
+};
+
+exports.claimWithSafe = async (safe, signer) => {
+  const tx = await createClaimTx(signer);
+  const receipt = await exports.executeSafeTx(tx, safe);
+
+  return receipt;
+};
+
+exports.swapWithSafe = async (safe, signer) => {
+  const swaps = ["CRV", "CVX"];
+  const txs = await Promise.allSettled(
+    // Accessed from the exports object so it can be mocked in tests
+    swaps.map((swap) => lpaccount.createSwapTx(signer, swap))
+  );
+  const filteredTxs = txs.filter((tx) => tx.status === "fulfilled");
+
+  const receipts = await Promise.all(
+    filteredTxs.map(({ value: tx }) => exports.executeSafeTx(tx, safe))
+  );
+
+  return receipts;
+};
+
+exports.main = async (signer) => {
+  const safe = await exports.getSafe(signer);
+
+  const claimReceipt = await exports.claimWithSafe(safe, signer);
+  const swapReceipts = await exports.swapWithSafe(safe, signer);
+
+  return { claimReceipt, swapReceipts };
 };
 
 // Entrypoint for the Autotask
@@ -87,7 +79,9 @@ exports.handler = async (event) => {
   const signer = new DefenderRelaySigner(credentials, provider, {
     speed: "fast",
   });
-  return main(signer);
+  const receipts = main(signer);
+
+  return receipts;
 };
 
 // To run locally (this code will not be executed in Autotasks)
