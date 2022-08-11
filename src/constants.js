@@ -23,92 +23,92 @@ exports.SWAPS = {
 
 exports.LP_ACCOUNT_ABI = [
   {
-    "inputs": [
+    inputs: [
       {
-        "internalType": "string[]",
-        "name": "names",
-        "type": "string[]"
-      }
+        internalType: "string[]",
+        name: "names",
+        type: "string[]",
+      },
     ],
-    "name": "claim",
-    "outputs": [],
-    "stateMutability": "nonpayable",
-    "type": "function"
+    name: "claim",
+    outputs: [],
+    stateMutability: "nonpayable",
+    type: "function",
   },
   {
-    "inputs": [
+    inputs: [
       {
-        "internalType": "string",
-        "name": "name",
-        "type": "string"
-      }
+        internalType: "string",
+        name: "name",
+        type: "string",
+      },
     ],
-    "name": "getLpTokenBalance",
-    "outputs": [
+    name: "getLpTokenBalance",
+    outputs: [
       {
-        "internalType": "uint256",
-        "name": "value",
-        "type": "uint256"
-      }
+        internalType: "uint256",
+        name: "value",
+        type: "uint256",
+      },
     ],
-    "stateMutability": "view",
-    "type": "function"
+    stateMutability: "view",
+    type: "function",
   },
   {
-    "inputs": [
+    inputs: [
       {
-        "internalType": "string",
-        "name": "name",
-        "type": "string"
+        internalType: "string",
+        name: "name",
+        type: "string",
       },
       {
-        "internalType": "uint256",
-        "name": "amount",
-        "type": "uint256"
+        internalType: "uint256",
+        name: "amount",
+        type: "uint256",
       },
       {
-        "internalType": "uint256",
-        "name": "minAmount",
-        "type": "uint256"
-      }
+        internalType: "uint256",
+        name: "minAmount",
+        type: "uint256",
+      },
     ],
-    "name": "swap",
-    "outputs": [],
-    "stateMutability": "nonpayable",
-    "type": "function"
+    name: "swap",
+    outputs: [],
+    stateMutability: "nonpayable",
+    type: "function",
   },
   {
-    "inputs": [],
-    "name": "zapNames",
-    "outputs": [
+    inputs: [],
+    name: "zapNames",
+    outputs: [
       {
-        "internalType": "string[]",
-        "name": "",
-        "type": "string[]"
-      }
+        internalType: "string[]",
+        name: "",
+        type: "string[]",
+      },
     ],
-    "stateMutability": "view",
-    "type": "function"
-  }
+    stateMutability: "view",
+    type: "function",
+  },
 ];
 exports.ERC20_ABI = [
   {
-    "inputs": [
+    inputs: [
       {
-        "internalType": "address",
-        "name": "account",
-        "type": "address"
-      }
+        internalType: "address",
+        name: "account",
+        type: "address",
+      },
     ],
-    "name": "balanceOf",
-    "outputs": [
+    name: "balanceOf",
+    outputs: [
       {
-        "internalType": "uint256",
-        "name": "",
-        "type": "uint256"
-      }
+        internalType: "uint256",
+        name: "",
+        type: "uint256",
+      },
     ],
-    "stateMutability": "view",
-    "type": "function"
-  }
+    stateMutability: "view",
+    type: "function",
+  },
 ];
