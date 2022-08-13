@@ -4,9 +4,9 @@ const {
   DefenderRelayProvider,
 } = require("defender-relay-client/lib/ethers");
 const { default: Safe, EthersAdapter } = require("@gnosis.pm/safe-core-sdk");
-const { LP_SAFE_ADDRESS } = require("./constants");
+const { LP_SAFE_ADDRESS } = require("../../common/constants");
 
-const lpaccount = require("./lpaccount");
+const lpaccount = require("../../common/lpaccount");
 const { createClaimTx } = lpaccount;
 
 exports.getSafe = async (signer) => {
