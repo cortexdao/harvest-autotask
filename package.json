@@ -46,6 +46,7 @@
     "prettier-plugin-solidity": "^1.0.0-beta.24",
     "sinon": "^14.0.0",
     "solidity-coverage": "^0.7.21",
-    "typechain": "^8.1.0"
+    "typechain": "^8.1.0",
+    "yargs": "^17.5.1"
   }
 }
