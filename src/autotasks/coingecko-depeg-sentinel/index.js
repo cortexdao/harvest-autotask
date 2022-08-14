@@ -35,7 +35,8 @@ exports.handler = async (payload) => {
 // To run locally (this code will not be executed in Autotasks)
 if (require.main === module) {
   const fs = require("fs");
-  const payload = fs.readFileSync(0, "utf-8");
+  const stdin = fs.readFileSync(0, "utf-8");
+  const payload = JSON.parse(stdin);
 
   exports
     .handler(payload) // pass in JSON from piped stdin
