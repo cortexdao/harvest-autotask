@@ -8,7 +8,9 @@ const {
   takeSnapshot,
 } = require("@nomicfoundation/hardhat-network-helpers");
 const { smock } = require("@defi-wonderland/smock");
+
 const coingecko = require("../src/common/coingecko");
+
 const lpaccount = require("../src/common/lpaccount");
 const {
   getLpBalances,
@@ -21,7 +23,10 @@ const {
 } = lpaccount;
 
 const index = require("../src/autotasks/harvest/index");
-const { getSafe, executeSafeTx, claimWithSafe, swapWithSafe, main } = index;
+const { claimWithSafe, swapWithSafe, main } = index;
+
+const safeHelpers = require("../src/common/safe");
+const { getSafe, executeSafeTx } = safeHelpers;
 
 const {
   LP_SAFE_ADDRESS,
@@ -437,7 +442,7 @@ describe("Harvest Autotask", () => {
       );
 
       const receipt = { txHash: "0x0" };
-      sinon.replace(index, "executeSafeTx", sinon.fake.resolves(receipt));
+      sinon.replace(safeHelpers, "executeSafeTx", sinon.fake.resolves(receipt));
 
       const safe = sinon.fake();
       const receipts = await swapWithSafe(safe, signer);
@@ -456,7 +461,7 @@ describe("Harvest Autotask", () => {
 
       const receipt = { txHash: "0x0" };
       const executeSafeTxFake = sinon.replace(
-        index,
+        safeHelpers,
         "executeSafeTx",
         sinon.fake.resolves(receipt)
       );
@@ -475,7 +480,7 @@ describe("Harvest Autotask", () => {
 
       const receipt = { txHash: "0x0" };
       const executeSafeTxFake = sinon.replace(
-        index,
+        safeHelpers,
         "executeSafeTx",
         sinon.fake.resolves(receipt)
       );
