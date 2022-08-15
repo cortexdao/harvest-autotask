@@ -14,14 +14,26 @@ const configureAxios = (axios) => {
 exports.getTokenPrice = async (address) => {
   const baseUrl = "https://api.coingecko.com/api/v3/";
   const path = "simple/token_price/ethereum";
-
   const quoteCurrency = "usd";
-  const params = {
-    contract_addresses: address,
-    vs_currencies: quoteCurrency,
+
+  const getResponse = async (contractAddresses) => {
+    const params = {
+      contract_addresses: contractAddresses,
+      vs_currencies: quoteCurrency,
+    };
+    const response = await axios.get(baseUrl + path, { params });
+
+    return response;
   };
-  const response = await axios.get(baseUrl + path, { params });
-  const price = response.data[address.toLowerCase()][quoteCurrency];
+
+  let price;
+  if (Array.isArray(address)) {
+    const response = await getResponse(address.join(","));
+    price = Object.values(response.data).map((value) => value[quoteCurrency]);
+  } else {
+    const response = await getResponse(address);
+    price = response.data[address][quoteCurrency];
+  }
 
   return price;
 };
