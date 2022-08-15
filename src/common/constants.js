@@ -23,6 +23,8 @@ const threePool = [
 exports.MUSD_ADDRESS = "0xe2f2a5C287993345a840Db3B0845fbC70f5935a5";
 
 // Stableswaps
+exports.THREEPOOL_STABLESWAP_ADDRESS =
+  "0xbEbc44782C7dB0a1A60Cb6fe97d0b483032FF1C7";
 exports.MUSD_STABLESWAP_ADDRESS = "0x8474DdbE98F5aA3179B3B3F5942D724aFcdec9f6";
 
 exports.DEPEG_THRESHOLDS = {
@@ -33,6 +35,7 @@ exports.DEPEG_THRESHOLDS = {
 };
 
 exports.CURVE_POOLS = {
+  [exports.THREEPOOL_STABLESWAP_ADDRESS]: threePool,
   [exports.MUSD_STABLESWAP_ADDRESS]: [exports.MUSD_ADDRESS, ...threePool],
 };
 
