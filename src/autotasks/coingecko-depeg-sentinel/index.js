@@ -1,25 +1,120 @@
 const { ethers } = require("ethers");
 const coingecko = require("../../common/coingecko");
-const { DEPEG_THRESHOLDS, MUSD_ADDRESS } = require("../../common/constants");
+const { CURVE_POOLS, DEPEG_THRESHOLDS } = require("../../common/constants");
 
-exports.main = async (events) => {
-  const matches = [];
+exports.getGroupedEvents = (events) => {
+  const groupEvent = (address, groups, event) => {
+    groups[address] = groups[address] || [];
+    groups[address].push(event);
+  };
 
-  const price = await coingecko.getTokenPrice(MUSD_ADDRESS);
+  const groupEvents = (groups, event) => {
+    event.addresses.forEach((address) => groupEvent(address, groups, event));
+    return groups;
+  };
 
-  if (price < 0) {
+  const groupedEvents = events.reduce(groupEvents, {});
+
+  return groupedEvents;
+};
+
+exports.validatePrices = (prices) => {
+  const isValidPrices = prices.every((price) => price >= 0);
+
+  if (!isValidPrices) {
     throw new RangeError("Token price cannot be negative");
   }
+};
 
-  if (price < DEPEG_THRESHOLDS[MUSD_ADDRESS]) {
-    for (const event of events) {
-      matches.push({ hash: event.hash });
+exports.isDepegged = (prices, tokenAddresses) => {
+  if (prices.length !== tokenAddresses.length) {
+    throw new Error("Price and token address arrays must be the same length");
+  }
+
+  const isDepegged = prices.some((price, i) => {
+    const address = tokenAddresses[i];
+    const threshold = DEPEG_THRESHOLDS[address];
+
+    if (threshold === undefined) {
+      throw new Error(`Depeg threshold not configured for token: ${address}`);
     }
 
-    return matches;
+    return price < threshold;
+  });
+
+  return isDepegged;
+};
+
+exports.getMatchesFromEvents = (events) => {
+  const matches = events.map(({ hash }) => {
+    return { hash };
+  });
+
+  return matches;
+};
+
+exports.getDepeggedMatchesForPoolAddress = async (
+  poolAddress,
+  groupedEvents
+) => {
+  const tokenAddresses = CURVE_POOLS[poolAddress];
+
+  if (tokenAddresses === undefined) {
+    throw new Error(`Tokens not configured for Curve pool: ${poolAddress}`);
+  }
+
+  const prices = await coingecko.getTokenPrice(tokenAddresses);
+
+  exports.validatePrices(prices);
+
+  const isDepegged = exports.isDepegged(prices, tokenAddresses);
+
+  if (isDepegged) {
+    return exports.getMatchesFromEvents(groupedEvents[poolAddress]);
   } else {
     return [];
   }
+};
+
+exports.getDepeggedMatchesForPoolAddresses = async (
+  poolAddresses,
+  groupedEvents
+) => {
+  const matchesForPoolAddresses = await Promise.all(
+    poolAddresses.map((poolAddress) =>
+      exports.getDepeggedMatchesForPoolAddress(poolAddress, groupedEvents)
+    )
+  );
+
+  const matchesForPoolAddressesFiltered = matchesForPoolAddresses.filter(
+    (match) => match.length > 0
+  );
+
+  return matchesForPoolAddressesFiltered;
+};
+
+exports.getUniquePoolAddresses = (events) => {
+  const poolAddresses = [
+    ...new Set(events.map((event) => event.addresses).flat()),
+  ];
+
+  return poolAddresses;
+};
+
+exports.main = async (events) => {
+  const poolAddresses = exports.getUniquePoolAddresses(events);
+
+  const groupedEvents = exports.getGroupedEvents(events);
+
+  const matchesForPoolAddresses =
+    await exports.getDepeggedMatchesForPoolAddresses(
+      poolAddresses,
+      groupedEvents
+    );
+
+  const matches = matchesForPoolAddresses.flat();
+
+  return matches;
 };
 
 // Entrypoint for the Autotask
