@@ -119,6 +119,11 @@ exports.main = async (events) => {
 
 // Entrypoint for the Autotask
 exports.handler = async (payload) => {
+  // Handler was triggered manually, by a schedule, or by a sentinel
+  if (payload.request === undefined) {
+    throw Error("Autotask should only be used to filter sentinel matches");
+  }
+
   const conditionRequest = payload.request.body;
   const events = conditionRequest.events;
 
