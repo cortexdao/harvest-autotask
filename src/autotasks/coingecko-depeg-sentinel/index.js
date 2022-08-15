@@ -132,7 +132,7 @@ exports.handler = async (payload) => {
   const conditionRequest = payload.request.body;
   const events = conditionRequest.events;
 
-  const matches = main(events);
+  const matches = await exports.main(events);
 
   return { matches };
 };
