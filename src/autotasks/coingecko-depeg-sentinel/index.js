@@ -4,8 +4,9 @@ const { CURVE_POOLS, DEPEG_THRESHOLDS } = require("../../common/constants");
 
 exports.getGroupedEvents = (events) => {
   const groupEvent = (address, groups, event) => {
-    groups[address] = groups[address] || [];
-    groups[address].push(event);
+    const addressChecksum = ethers.utils.getAddress(address);
+    groups[addressChecksum] = groups[addressChecksum] || [];
+    groups[addressChecksum].push(event);
   };
 
   const groupEvents = (groups, event) => {
@@ -100,7 +101,9 @@ exports.getUniquePoolAddresses = (events) => {
     ...new Set(events.map((event) => event.matchedAddresses).flat()),
   ];
 
-  return poolAddresses;
+  const poolAddressesChecksum = poolAddresses.map(ethers.utils.getAddress);
+
+  return poolAddressesChecksum;
 };
 
 exports.main = async (events) => {
