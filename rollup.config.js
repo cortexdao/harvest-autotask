@@ -9,25 +9,35 @@ const autotaskInputDirs = readdirSync(autotaskSrcDir, {
 
 const inputEntryPoint = "index.js";
 const outputEntryPoint = "index";
-const autotaskInput = Object.fromEntries(
-  autotaskInputDirs.map((d) => [
-    path.join(d.name, outputEntryPoint),
-    path.join(autotaskSrcDir, d.name, inputEntryPoint),
-  ])
-);
+const autotaskInputs = autotaskInputDirs.map((d) => {
+  const outputPath = path.join(d.name, outputEntryPoint);
+  const inputPath = path.join(autotaskSrcDir, d.name, inputEntryPoint);
+  return {
+    [outputPath]: inputPath,
+  };
+});
 
 const autotaskOutputDir = path.join("build", "autotasks");
 
-export default {
-  input: autotaskInput,
-  output: { dir: autotaskOutputDir, format: "cjs", exports: "named" },
-  plugins: [commonjs()],
-  external: [
-    "ethers",
-    "defender-relay-client/lib/ethers",
-    "@gnosis.pm/safe-core-sdk",
-    "dotenv",
-    "axios",
-    "axios-retry",
-  ],
-};
+const configs = autotaskInputs.map((autotaskInput) => {
+  return {
+    input: autotaskInput,
+    output: {
+      dir: autotaskOutputDir,
+      format: "cjs",
+      exports: "default",
+    },
+    plugins: [commonjs()],
+    external: [
+      "ethers",
+      "defender-relay-client/lib/ethers",
+      "@gnosis.pm/safe-core-sdk",
+      "dotenv",
+      "axios",
+      "axios-retry",
+      "fs",
+    ],
+  };
+});
+
+export default configs;
