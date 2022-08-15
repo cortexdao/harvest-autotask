@@ -9,7 +9,9 @@ exports.getGroupedEvents = (events) => {
   };
 
   const groupEvents = (groups, event) => {
-    event.addresses.forEach((address) => groupEvent(address, groups, event));
+    event.matchedAddresses.forEach((address) =>
+      groupEvent(address, groups, event)
+    );
     return groups;
   };
 
@@ -95,7 +97,7 @@ exports.getDepeggedMatchesForPoolAddresses = async (
 
 exports.getUniquePoolAddresses = (events) => {
   const poolAddresses = [
-    ...new Set(events.map((event) => event.addresses).flat()),
+    ...new Set(events.map((event) => event.matchedAddresses).flat()),
   ];
 
   return poolAddresses;

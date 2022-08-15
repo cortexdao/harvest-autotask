@@ -35,10 +35,10 @@ describe("Coingecko Depeg Sentinel", () => {
       const address3 = "0x2";
 
       const events = [
-        { hash: "0x01", addresses: [address1] },
-        { hash: "0x02", addresses: [address1, address2] },
-        { hash: "0x03", addresses: [address3] },
-        { hash: "0x04", addresses: [address2, address3] },
+        { hash: "0x01", matchedAddresses: [address1] },
+        { hash: "0x02", matchedAddresses: [address1, address2] },
+        { hash: "0x03", matchedAddresses: [address3] },
+        { hash: "0x04", matchedAddresses: [address2, address3] },
       ];
       const groupedEvents = getGroupedEvents(events);
 
@@ -57,7 +57,7 @@ describe("Coingecko Depeg Sentinel", () => {
       const address3 = "0x2";
 
       const events = [
-        { hash: "0x01", addresses: [address1, address2, address3] },
+        { hash: "0x01", matchedAddresses: [address1, address2, address3] },
       ];
       const groupedEvents = getGroupedEvents(events);
 
@@ -73,7 +73,7 @@ describe("Coingecko Depeg Sentinel", () => {
     it("should add an event to a single group if it has one address", () => {
       const address1 = "0x0";
 
-      const events = [{ hash: "0x01", addresses: [address1] }];
+      const events = [{ hash: "0x01", matchedAddresses: [address1] }];
       const groupedEvents = getGroupedEvents(events);
 
       const expectedGroupedEvents = { [address1]: [events[0]] };
@@ -82,7 +82,7 @@ describe("Coingecko Depeg Sentinel", () => {
     });
 
     it("should not add an event to any groups if it has zero addresses", () => {
-      const events = [{ hash: "0x01", addresses: [] }];
+      const events = [{ hash: "0x01", matchedAddresses: [] }];
       const groupedEvents = getGroupedEvents(events);
 
       expect(groupedEvents).to.be.empty;
@@ -92,9 +92,9 @@ describe("Coingecko Depeg Sentinel", () => {
       const address1 = "0x0";
 
       const events = [
-        { hash: "0x01", addresses: [address1] },
-        { hash: "0x02", addresses: [address1] },
-        { hash: "0x03", addresses: [address1] },
+        { hash: "0x01", matchedAddresses: [address1] },
+        { hash: "0x02", matchedAddresses: [address1] },
+        { hash: "0x03", matchedAddresses: [address1] },
       ];
       const groupedEvents = getGroupedEvents(events);
 
@@ -363,9 +363,9 @@ describe("Coingecko Depeg Sentinel", () => {
       const address3 = "0x2";
 
       const events = [
-        { addresses: [address1, address2] },
-        { addresses: [address3] },
-        { addresses: [address1, address3] },
+        { matchedAddresses: [address1, address2] },
+        { matchedAddresses: [address3] },
+        { matchedAddresses: [address1, address3] },
       ];
 
       const addresses = getUniquePoolAddresses(events);
@@ -380,8 +380,8 @@ describe("Coingecko Depeg Sentinel", () => {
       const address3 = "0x2";
 
       const events = [
-        { addresses: [address1, address1] },
-        { addresses: [address1] },
+        { matchedAddresses: [address1, address1] },
+        { matchedAddresses: [address1] },
       ];
 
       const addresses = getUniquePoolAddresses(events);
@@ -395,10 +395,10 @@ describe("Coingecko Depeg Sentinel", () => {
     it("should flatten the nested array of matches from pools that have a depeg", async () => {
       const otherPoolAddress = "0x0";
       const events = [
-        { hash: "0x01", addresses: [MUSD_STABLESWAP_ADDRESS] },
-        { hash: "0x02", addresses: [MUSD_STABLESWAP_ADDRESS] },
-        { hash: "0x03", addresses: [otherPoolAddress] },
-        { hash: "0x04", addresses: [otherPoolAddress] },
+        { hash: "0x01", matchedAddresses: [MUSD_STABLESWAP_ADDRESS] },
+        { hash: "0x02", matchedAddresses: [MUSD_STABLESWAP_ADDRESS] },
+        { hash: "0x03", matchedAddresses: [otherPoolAddress] },
+        { hash: "0x04", matchedAddresses: [otherPoolAddress] },
       ];
       const depeggedMatches = [
         [{ hash: "0x01" }, { hash: "0x02" }],
@@ -423,10 +423,10 @@ describe("Coingecko Depeg Sentinel", () => {
     it("should return an empty array if there was no depegs", async () => {
       const otherPoolAddress = "0x0";
       const events = [
-        { hash: "0x01", addresses: [MUSD_STABLESWAP_ADDRESS] },
-        { hash: "0x02", addresses: [MUSD_STABLESWAP_ADDRESS] },
-        { hash: "0x03", addresses: [otherPoolAddress] },
-        { hash: "0x04", addresses: [otherPoolAddress] },
+        { hash: "0x01", matchedAddresses: [MUSD_STABLESWAP_ADDRESS] },
+        { hash: "0x02", matchedAddresses: [MUSD_STABLESWAP_ADDRESS] },
+        { hash: "0x03", matchedAddresses: [otherPoolAddress] },
+        { hash: "0x04", matchedAddresses: [otherPoolAddress] },
       ];
       const depeggedMatches = [];
       sinon.replace(index, "getDepeggedMatchesForPoolAddresses", () =>
@@ -441,10 +441,10 @@ describe("Coingecko Depeg Sentinel", () => {
     it("should throw an error if there was a problem checking for depegs", async () => {
       const otherPoolAddress = "0x0";
       const events = [
-        { hash: "0x01", addresses: [MUSD_STABLESWAP_ADDRESS] },
-        { hash: "0x02", addresses: [MUSD_STABLESWAP_ADDRESS] },
-        { hash: "0x03", addresses: [otherPoolAddress] },
-        { hash: "0x04", addresses: [otherPoolAddress] },
+        { hash: "0x01", matchedAddresses: [MUSD_STABLESWAP_ADDRESS] },
+        { hash: "0x02", matchedAddresses: [MUSD_STABLESWAP_ADDRESS] },
+        { hash: "0x03", matchedAddresses: [otherPoolAddress] },
+        { hash: "0x04", matchedAddresses: [otherPoolAddress] },
       ];
       const depeggedMatches = [];
       sinon.replace(index, "getDepeggedMatchesForPoolAddresses", () =>
