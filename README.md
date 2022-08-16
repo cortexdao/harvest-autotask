@@ -1,4 +1,4 @@
-# Harvest Autotask
+# OpenZeppelin Autotasks for CortexDAO
 
 ## Installation
 

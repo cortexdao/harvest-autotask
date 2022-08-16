@@ -1,9 +1,10 @@
 {
-  "name": "harvest-autotask",
+  "name": "protocol-autotasks",
   "version": "3.0.1",
   "main": "index.js",
   "license": "MIT",
   "scripts": {
+    "test": "hardhat test",
     "build": "rollup --config",
     "deploy": "node scripts/deploy.js"
   },
