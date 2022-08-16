@@ -1,6 +1,7 @@
 import { readdirSync } from "fs";
 import path from "path";
 import commonjs from "@rollup/plugin-commonjs";
+import json from "@rollup/plugin-json";
 
 const autotaskSrcDir = path.join("src", "autotasks");
 const autotaskInputDirs = readdirSync(autotaskSrcDir, {
@@ -27,7 +28,7 @@ const configs = autotaskInputs.map((autotaskInput) => {
       format: "cjs",
       exports: "default",
     },
-    plugins: [commonjs()],
+    plugins: [commonjs(), json()],
     external: [
       "ethers",
       "defender-relay-client/lib/ethers",
