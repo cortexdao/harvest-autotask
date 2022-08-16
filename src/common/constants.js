@@ -1,3 +1,6 @@
+// Global constants
+exports.COINGECKO_PRICE_DECIMALS = 18n;
+
 // Safes
 exports.LP_SAFE_ADDRESS = "0x5b79121EA6dC2395B8046eCDCE14D66c2bF221B0";
 

@@ -46,3 +46,10 @@ exports.toBigInt = (price) => {
     .toBigInt();
   return priceBigInt;
 };
+
+exports.getUsdValueUnnormalized = (balance, price) => {
+  const priceBigInt = exports.toBigInt(price);
+  const usdValue = (balance * priceBigInt) / 10n ** COINGECKO_PRICE_DECIMALS;
+
+  return usdValue;
+};
