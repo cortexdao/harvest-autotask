@@ -9,6 +9,7 @@ const {
   MUSD_STABLESWAP_ADDRESS,
   FRAX_STABLESWAP_ADDRESS,
   CURVE_POOLS,
+  DEPEG_THRESHOLDS,
 } = require("../src/common/constants");
 const coingecko = require("../src/common/coingecko");
 const index = require("../src/autotasks/coingecko-depeg-sentinel/index");
@@ -454,6 +455,28 @@ describe("Coingecko Depeg Sentinel", () => {
       );
 
       await expect(main(events)).to.be.rejected;
+    });
+
+    it("should be able to return matches for every configured pool", async () => {
+      const events = Object.keys(CURVE_POOLS).map((poolAddress, i) => {
+        return {
+          hash: `0x0${i}`,
+          matchedAddresses: [poolAddress],
+        };
+      });
+
+      const getTokenPriceFake = (addresses) =>
+        addresses.map((a) => DEPEG_THRESHOLDS[a] - 0.1);
+
+      sinon.replace(coingecko, "getTokenPrice", getTokenPriceFake);
+
+      const matches = await main(events);
+
+      const expectedMatches = events.map(({ hash }) => {
+        return { hash };
+      });
+
+      expect(matches).to.deep.equal(expectedMatches);
     });
   });
 });
