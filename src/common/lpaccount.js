@@ -51,13 +51,7 @@ exports.getSwapAmountUsdValue = (amount, tokenPrice) => {
     throw new RangeError("Token price cannot be negative");
   }
 
-  const tokenPriceDecimals = 18n;
-  const tokenPriceBigInt = ethers.utils
-    .parseUnits(tokenPrice.toString(), tokenPriceDecimals)
-    .toBigInt();
-
-  const usdValue = (amount * tokenPriceBigInt) / 10n ** tokenPriceDecimals;
-
+  const usdValue = coingecko.getUsdValueUnnormalized(amount, tokenPrice);
   return usdValue;
 };
 
