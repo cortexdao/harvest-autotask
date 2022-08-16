@@ -31,13 +31,13 @@ const { getSafe, executeSafeTx } = safeHelpers;
 const {
   LP_SAFE_ADDRESS,
   LP_ACCOUNT_ADDRESS,
-  LP_ACCOUNT_ABI,
   CRV_ADDRESS,
   CVX_ADDRESS,
   USDC_ADDRESS,
-  ERC20_ABI,
   SWAPS,
 } = require("../src/common/constants");
+const erc20Abi = require("../src/abis/ERC20.json");
+const lpAccountAbi = require("../src/abis/LpAccountV2.json");
 
 use(smock.matchers);
 use(chaiAsPromised);
@@ -61,7 +61,7 @@ describe("Harvest Autotask", () => {
 
   before(async () => {
     [signer] = await ethers.getSigners();
-    lpAccount = new ethers.Contract(LP_ACCOUNT_ADDRESS, LP_ACCOUNT_ABI, signer);
+    lpAccount = new ethers.Contract(LP_ACCOUNT_ADDRESS, lpAccountAbi, signer);
   });
 
   describe("getLpBalances", () => {
@@ -136,8 +136,8 @@ describe("Harvest Autotask", () => {
     });
 
     it("should claim CRV and CVX rewards", async () => {
-      const crv = new ethers.Contract(CRV_ADDRESS, ERC20_ABI, safeSigner);
-      const cvx = new ethers.Contract(CVX_ADDRESS, ERC20_ABI, safeSigner);
+      const crv = new ethers.Contract(CRV_ADDRESS, erc20Abi, safeSigner);
+      const cvx = new ethers.Contract(CVX_ADDRESS, erc20Abi, safeSigner);
 
       const tx = await createClaimTx(safeSigner);
 
@@ -375,13 +375,13 @@ describe("Harvest Autotask", () => {
           it(`should swap ${swap}`, async () => {
             const token = new ethers.Contract(
               SWAPS[swap].address,
-              ERC20_ABI,
+              erc20Abi,
               safeSigner
             );
 
             const usdc = new ethers.Contract(
               USDC_ADDRESS,
-              ERC20_ABI,
+              erc20Abi,
               safeSigner
             );
 
@@ -573,7 +573,7 @@ describe("Harvest Autotask", () => {
       const safe = await getSafe(owner);
       await claimWithSafe(safe, owner);
 
-      const lpAccountFake = await smock.fake(LP_ACCOUNT_ABI, {
+      const lpAccountFake = await smock.fake(lpAccountAbi, {
         address: lpAccount.address,
       });
       lpAccountFake.swap.returns();
@@ -587,7 +587,7 @@ describe("Harvest Autotask", () => {
     it("should call the `LpAccount` claim function", async () => {
       sinon.replace(index, "swapWithSafe", sinon.fake());
 
-      const lpAccountFake = await smock.fake(LP_ACCOUNT_ABI, {
+      const lpAccountFake = await smock.fake(lpAccountAbi, {
         address: lpAccount.address,
       });
       lpAccountFake.claim.returns();

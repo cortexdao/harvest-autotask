@@ -1,11 +1,8 @@
 const { ethers } = require("ethers");
 const coingecko = require("./coingecko");
-const {
-  ERC20_ABI,
-  LP_ACCOUNT_ADDRESS,
-  LP_ACCOUNT_ABI,
-  SWAPS,
-} = require("./constants");
+const { LP_ACCOUNT_ADDRESS, SWAPS } = require("./constants");
+const erc20Abi = require("../abis/ERC20.json");
+const lpAccountAbi = require("../abis/LpAccountV2.json");
 
 exports.getLpBalances = async (lpAccount, zapNames) => {
   const lpBalances = await Promise.all(
@@ -28,7 +25,7 @@ exports.getClaimNames = (zapNames, lpBalances) => {
 exports.createClaimTx = async (signer) => {
   const lpAccount = new ethers.Contract(
     LP_ACCOUNT_ADDRESS,
-    LP_ACCOUNT_ABI,
+    lpAccountAbi,
     signer
   );
 
@@ -113,7 +110,7 @@ exports.getSwapMinAmount = async (swap, amount) => {
 exports.createSwapTx = async (signer, swap) => {
   const lpAccount = new ethers.Contract(
     LP_ACCOUNT_ADDRESS,
-    LP_ACCOUNT_ABI,
+    lpAccountAbi,
     signer
   );
 
@@ -123,7 +120,7 @@ exports.createSwapTx = async (signer, swap) => {
     outTokenDecimals,
   } = SWAPS[swap];
 
-  const token = new ethers.Contract(inTokenAddress, ERC20_ABI, signer);
+  const token = new ethers.Contract(inTokenAddress, erc20Abi, signer);
 
   const amount = (await token.balanceOf(lpAccount.address)).toBigInt();
   if (amount < 1n) {
