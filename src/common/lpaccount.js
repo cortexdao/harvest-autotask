@@ -4,6 +4,16 @@ const { LP_ACCOUNT_ADDRESS, SWAPS } = require("./constants");
 const erc20Abi = require("../abis/ERC20.json");
 const lpAccountAbi = require("../abis/LpAccountV2.json");
 
+exports.getZapNames = async (signer) => {
+  const lpAccount = new ethers.Contract(
+    LP_ACCOUNT_ADDRESS,
+    lpAccountAbi,
+    signer
+  );
+  const zapNames = await lpAccount.zapNames();
+  return zapNames;
+};
+
 exports.getLpBalances = async (lpAccount, zapNames) => {
   const lpBalances = await Promise.all(
     zapNames.map((zap) => lpAccount.getLpTokenBalance(zap).catch(() => 0))
