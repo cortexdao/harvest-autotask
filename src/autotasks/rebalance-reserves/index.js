@@ -4,6 +4,25 @@ const {
   DefenderRelayProvider,
 } = require("defender-relay-client/lib/ethers");
 
+const { TARGET_WEIGHTS, WEIGHT_DECIMALS } = require("../../common/constants");
+
+exports.getPositionDeltas = (positionSizes) => {
+  const nav = positionSizes.reduce((nav, { value }) => (nav += value), 0n);
+
+  const targetValueEntries = TARGET_WEIGHTS.map(({ name, weight }) => {
+    const value = (weight * nav) / 10n ** WEIGHT_DECIMALS;
+    return [name, value];
+  });
+  const targetValues = Object.fromEntries(targetValueEntries);
+
+  const sizeDeltas = positionSizes.map(({ name, value }) => {
+    const target = targetValues[name] || 0n;
+    return { name, delta: target - value };
+  });
+
+  return sizeDeltas;
+};
+
 exports.main = async (signer) => {
 };
 

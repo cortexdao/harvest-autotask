@@ -1,3 +1,5 @@
+const { toBigInt } = require("./utils");
+
 // Global constants
 exports.USD_DECIMALS = 8n;
 exports.COINGECKO_PRICE_DECIMALS = 18n;
@@ -112,3 +114,21 @@ exports.RESERVE_POOLS = {
 exports.RESERVE_POOL_IDS = Object.values(exports.RESERVE_POOLS).map(
   ({ id }) => id
 );
+
+// Index weights
+exports.WEIGHT_DECIMALS = 8n;
+
+exports.TARGET_WEIGHTS = [
+  { name: "convex-3pool", weight: "7.33" },
+  { name: "convex-frax", weight: "10.56" },
+  { name: "convex-fraxusdc", weight: "10.56" },
+  { name: "convex-susdv2", weight: "2.64" },
+  { name: "convex-mim", weight: "10.56" },
+  { name: "convex-ironbank", weight: "4.69" },
+  { name: "convex-busdv2", weight: "4.69" },
+  { name: "convex-dola", weight: "10.56" },
+  { name: "convex-musd", weight: "4.69" },
+  // Convert weight values to BigInt
+].map(({ name, weight }) => {
+  return { name, weight: toBigInt(weight, exports.WEIGHT_DECIMALS - 2n) };
+});
