@@ -4,11 +4,7 @@ const {
   DefenderRelayProvider,
 } = require("defender-relay-client/lib/ethers");
 
-const safeHelpers = require("../../common/safe");
-const { getSafe } = safeHelpers;
-
 exports.main = async (signer) => {
-  const safe = await getSafe(signer);
 };
 
 // Entrypoint for the Autotask
