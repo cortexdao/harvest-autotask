@@ -1,5 +1,9 @@
 const { ethers } = require("ethers");
-const { META_POOL_TOKEN_ADDRESS, RESERVE_POOL_IDS } = require("./constants");
+const {
+  META_POOL_TOKEN_ADDRESS,
+  RESERVE_POOLS,
+  RESERVE_POOL_IDS,
+} = require("./constants");
 const maptAbi = require("../abis/MetaPoolTokenV2.json");
 
 /**
@@ -26,4 +30,20 @@ exports.getRebalanceAmounts = async (signer) => {
   });
 
   return rebalanceAmounts;
+};
+
+exports.normalizeRebalanceAmounts = (rebalanceAmounts) => {
+  const decimals = Object.values(RESERVE_POOLS).map(
+    ({ underlyerDecimals }) => underlyerDecimals
+  );
+  const normalizedDecimals = decimals.reduce((a, b) => (b > a ? b : a));
+
+  const normalizedAmounts = rebalanceAmounts.map(({ address, amount }) => {
+    const { underlyerDecimals } = RESERVE_POOLS[address];
+    const normalizedAmount =
+      (amount * 10n ** normalizedDecimals) / 10n ** underlyerDecimals;
+    return { address, amount: normalizedAmount };
+  });
+
+  return normalizedAmounts;
 };
