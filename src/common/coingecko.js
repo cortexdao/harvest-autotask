@@ -1,6 +1,6 @@
-const { ethers } = require("ethers");
 const axios = require("axios");
 const axiosRetry = require("axios-retry");
+const { toBigInt } = require("./utils");
 const { COINGECKO_PRICE_DECIMALS } = require("./constants");
 
 const configureAxios = (axios) => {
@@ -40,12 +40,7 @@ exports.getTokenPrice = async (address) => {
   return price;
 };
 
-exports.toBigInt = (price) => {
-  const priceBigInt = ethers.utils
-    .parseUnits(price.toString(), COINGECKO_PRICE_DECIMALS)
-    .toBigInt();
-  return priceBigInt;
-};
+exports.toBigInt = (price) => toBigInt(price, COINGECKO_PRICE_DECIMALS);
 
 exports.getUsdValueUnnormalized = (balance, price) => {
   const priceBigInt = exports.toBigInt(price);
