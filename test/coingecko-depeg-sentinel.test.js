@@ -5,7 +5,9 @@ const {
   DAI_ADDRESS,
   USDC_ADDRESS,
   USDT_ADDRESS,
+  THREEPOOL_STABLESWAP_ADDRESS,
   MUSD_STABLESWAP_ADDRESS,
+  FRAX_STABLESWAP_ADDRESS,
   CURVE_POOLS,
 } = require("../src/common/constants");
 const coingecko = require("../src/common/coingecko");
@@ -30,9 +32,9 @@ describe("Coingecko Depeg Sentinel", () => {
 
   describe("getGroupedEvents", () => {
     it("should group events by address", () => {
-      const address1 = "0x0";
-      const address2 = "0x1";
-      const address3 = "0x2";
+      const address1 = THREEPOOL_STABLESWAP_ADDRESS;
+      const address2 = MUSD_STABLESWAP_ADDRESS;
+      const address3 = FRAX_STABLESWAP_ADDRESS;
 
       const events = [
         { hash: "0x01", matchedAddresses: [address1] },
@@ -52,9 +54,9 @@ describe("Coingecko Depeg Sentinel", () => {
     });
 
     it("should add an event to multiple groups if it has multiple addresses", () => {
-      const address1 = "0x0";
-      const address2 = "0x1";
-      const address3 = "0x2";
+      const address1 = THREEPOOL_STABLESWAP_ADDRESS;
+      const address2 = MUSD_STABLESWAP_ADDRESS;
+      const address3 = FRAX_STABLESWAP_ADDRESS;
 
       const events = [
         { hash: "0x01", matchedAddresses: [address1, address2, address3] },
@@ -71,7 +73,7 @@ describe("Coingecko Depeg Sentinel", () => {
     });
 
     it("should add an event to a single group if it has one address", () => {
-      const address1 = "0x0";
+      const address1 = THREEPOOL_STABLESWAP_ADDRESS;
 
       const events = [{ hash: "0x01", matchedAddresses: [address1] }];
       const groupedEvents = getGroupedEvents(events);
@@ -89,7 +91,7 @@ describe("Coingecko Depeg Sentinel", () => {
     });
 
     it("should add multiple events to the same group if they have the same addresses", () => {
-      const address1 = "0x0";
+      const address1 = THREEPOOL_STABLESWAP_ADDRESS;
 
       const events = [
         { hash: "0x01", matchedAddresses: [address1] },
@@ -137,7 +139,7 @@ describe("Coingecko Depeg Sentinel", () => {
 
     it("should throw an error if there is not a depeg threshold for one of the tokens", () => {
       const prices = [1.0, 1.0, 1.0];
-      const fakeAddress = "0x0";
+      const fakeAddress = "0x0000000000000000000000000000000000000000";
       const tokenAddresses = [fakeAddress, USDC_ADDRESS, USDT_ADDRESS];
 
       expect(() => isDepegged(prices, tokenAddresses)).to.throw();
@@ -259,7 +261,7 @@ describe("Coingecko Depeg Sentinel", () => {
       );
 
       const poolAddress = MUSD_STABLESWAP_ADDRESS;
-      const otherPoolAddress = "0x0";
+      const otherPoolAddress = THREEPOOL_STABLESWAP_ADDRESS;
       const groupedEvents = {
         [MUSD_STABLESWAP_ADDRESS]: [{ hash: "0x01" }, { hash: "0x02" }],
         [otherPoolAddress]: [{ hash: "0x03" }, { hash: "0x04" }],
@@ -280,7 +282,7 @@ describe("Coingecko Depeg Sentinel", () => {
         Promise.resolve(prices)
       );
 
-      const otherPoolAddress = "0x0";
+      const otherPoolAddress = THREEPOOL_STABLESWAP_ADDRESS;
       const groupedEvents = {
         [otherPoolAddress]: [{ hash: "0x03" }, { hash: "0x04" }],
       };
@@ -293,7 +295,7 @@ describe("Coingecko Depeg Sentinel", () => {
 
   describe("getDepeggedMatchesForPoolAddresses", () => {
     it("should throw an error if any promise is rejected when getting matches for a pool address", async () => {
-      const poolAddressReject = "0x0";
+      const poolAddressReject = THREEPOOL_STABLESWAP_ADDRESS;
       const poolAddresses = [MUSD_STABLESWAP_ADDRESS, poolAddressReject];
       const groupedEvents = {
         [poolAddresses[0]]: [{ hash: "0x01" }, { hash: "0x02" }],
@@ -312,7 +314,7 @@ describe("Coingecko Depeg Sentinel", () => {
     });
 
     it("should return an array of the match arrays returned for each pool address", async () => {
-      const otherPoolAddress = "0x0";
+      const otherPoolAddress = THREEPOOL_STABLESWAP_ADDRESS;
       const poolAddresses = [MUSD_STABLESWAP_ADDRESS, otherPoolAddress];
       const groupedEvents = {
         [poolAddresses[0]]: [{ hash: "0x01" }, { hash: "0x02" }],
@@ -336,7 +338,7 @@ describe("Coingecko Depeg Sentinel", () => {
     });
 
     it("should return an empty array if none of the pool address have depegged tokens", async () => {
-      const otherPoolAddress = "0x0";
+      const otherPoolAddress = THREEPOOL_STABLESWAP_ADDRESS;
       const poolAddresses = [MUSD_STABLESWAP_ADDRESS, otherPoolAddress];
       const groupedEvents = {
         [poolAddresses[0]]: [{ hash: "0x01" }, { hash: "0x02" }],
@@ -358,9 +360,9 @@ describe("Coingecko Depeg Sentinel", () => {
 
   describe("getUniquePoolAddresses", () => {
     it("should convert a nested array of addresses into a one-dimensional array", () => {
-      const address1 = "0x0";
-      const address2 = "0x1";
-      const address3 = "0x2";
+      const address1 = THREEPOOL_STABLESWAP_ADDRESS;
+      const address2 = MUSD_STABLESWAP_ADDRESS;
+      const address3 = FRAX_STABLESWAP_ADDRESS;
 
       const events = [
         { matchedAddresses: [address1, address2] },
@@ -375,9 +377,9 @@ describe("Coingecko Depeg Sentinel", () => {
     });
 
     it("should remove duplicate addresses from all arrays", () => {
-      const address1 = "0x0";
-      const address2 = "0x1";
-      const address3 = "0x2";
+      const address1 = THREEPOOL_STABLESWAP_ADDRESS;
+      const address2 = MUSD_STABLESWAP_ADDRESS;
+      const address3 = FRAX_STABLESWAP_ADDRESS;
 
       const events = [
         { matchedAddresses: [address1, address1] },
@@ -393,7 +395,7 @@ describe("Coingecko Depeg Sentinel", () => {
 
   describe("main", () => {
     it("should flatten the nested array of matches from pools that have a depeg", async () => {
-      const otherPoolAddress = "0x0";
+      const otherPoolAddress = THREEPOOL_STABLESWAP_ADDRESS;
       const events = [
         { hash: "0x01", matchedAddresses: [MUSD_STABLESWAP_ADDRESS] },
         { hash: "0x02", matchedAddresses: [MUSD_STABLESWAP_ADDRESS] },
@@ -421,7 +423,7 @@ describe("Coingecko Depeg Sentinel", () => {
     });
 
     it("should return an empty array if there was no depegs", async () => {
-      const otherPoolAddress = "0x0";
+      const otherPoolAddress = THREEPOOL_STABLESWAP_ADDRESS;
       const events = [
         { hash: "0x01", matchedAddresses: [MUSD_STABLESWAP_ADDRESS] },
         { hash: "0x02", matchedAddresses: [MUSD_STABLESWAP_ADDRESS] },
@@ -439,7 +441,7 @@ describe("Coingecko Depeg Sentinel", () => {
     });
 
     it("should throw an error if there was a problem checking for depegs", async () => {
-      const otherPoolAddress = "0x0";
+      const otherPoolAddress = THREEPOOL_STABLESWAP_ADDRESS;
       const events = [
         { hash: "0x01", matchedAddresses: [MUSD_STABLESWAP_ADDRESS] },
         { hash: "0x02", matchedAddresses: [MUSD_STABLESWAP_ADDRESS] },
