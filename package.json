@@ -4,6 +4,7 @@
   "main": "index.js",
   "license": "MIT",
   "scripts": {
+    "test": "hardhat test",
     "build": "rollup --config",
     "deploy": "node scripts/deploy.js"
   },
