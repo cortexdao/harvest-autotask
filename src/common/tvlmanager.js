@@ -70,7 +70,7 @@ exports.getValue = async (tokens, tokenPrices, allocation, i) => {
 
   const allocationName = await allocation.NAME();
 
-  return { name: allocationName, value };
+  return { name: allocationName, value, tokens: tokens[i] };
 };
 
 exports.getIndexPositions = async (signer, allocationNames) => {
