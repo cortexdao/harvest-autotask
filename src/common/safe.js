@@ -1,4 +1,6 @@
-const { default: Safe, EthersAdapter } = require("@gnosis.pm/safe-core-sdk");
+const { ethers } = require("ethers");
+const { default: Safe } = require("@gnosis.pm/safe-core-sdk");
+const { default: EthersAdapter } = require("@gnosis.pm/safe-ethers-lib");
 const { LP_SAFE_ADDRESS } = require("./constants");
 
 exports.getSafe = async (signer) => {
@@ -10,6 +12,9 @@ exports.getSafe = async (signer) => {
 
 exports.executeSafeTx = async (tx, safe) => {
   const safeTx = await safe.createTransaction(tx);
+
+  // Should not be necessary per SDK docs, however the tx fails without it
+  const signedSafeTx = await safe.signTransaction(safeTx);
   const baseGas = 100000;
 
   const options = {
@@ -20,7 +25,7 @@ exports.executeSafeTx = async (tx, safe) => {
     gasLimit: safeTx.data["safeTxGas"] + baseGas,
   };
 
-  const executedTx = await safe.executeTransaction(safeTx, options);
+  const executedTx = await safe.executeTransaction(signedSafeTx, options);
 
   // Cannot use `?.` operator here because the autotask env uses node 12
   // - Optional chaining with `.?` requires node 14
