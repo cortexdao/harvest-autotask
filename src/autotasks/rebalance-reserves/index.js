@@ -94,6 +94,24 @@ exports.getLargestPositionDelta = (positions) => {
   return largestPositionDelta;
 };
 
+exports.deployReserves = async (signer, normalizedAmounts, positions) => {
+  const largestRebalancePositions = exports.getLargestRebalancePositions(
+    normalizedAmounts,
+    positions
+  );
+
+  if (largestRebalancePositions !== undefined) {
+    const largestPositionDelta = exports.getLargestPositionDelta(
+      largestRebalancePositions.positions
+    );
+
+    console.log(positions);
+    console.log(largestPositionDelta);
+
+    const maxDeploy = 20000n * 10n ** 8n;
+  }
+};
+
 exports.main = async (signer) => {
 };
 
