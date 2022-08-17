@@ -73,7 +73,7 @@ exports.getValue = async (tokens, tokenPrices, allocation, i) => {
   return { name: allocationName, value };
 };
 
-exports.getPositionSizes = async (signer, allocationNames) => {
+exports.getIndexPositions = async (signer, allocationNames) => {
   const tvlManager = new ethers.Contract(
     TVL_MANAGER_ADDRESS,
     tvlManagerAbi,
@@ -91,11 +91,11 @@ exports.getPositionSizes = async (signer, allocationNames) => {
 
   const tokenPrices = await exports.getAllocationTokenPrices(tokens);
 
-  const positionSizes = await Promise.all(
+  const positions = await Promise.all(
     allocations.map((allocation, i) =>
       exports.getValue(tokens, tokenPrices, allocation, i)
     )
   );
 
-  return positionSizes;
+  return positions;
 };
