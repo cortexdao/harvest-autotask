@@ -149,9 +149,9 @@ exports.handler = async (credentials) => {
   const signer = new DefenderRelaySigner(credentials, provider, {
     speed: "fast",
   });
-  const receipts = exports.main(signer);
+  const receipt = exports.main(signer);
 
-  return receipts;
+  return receipt;
 };
 
 // To run locally (this code will not be executed in Autotasks)
