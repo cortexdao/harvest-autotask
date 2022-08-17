@@ -44,12 +44,12 @@ exports.main = async (signer) => {
 };
 
 // Entrypoint for the Autotask
-exports.handler = async (event) => {
+exports.handler = async (credentials) => {
   const provider = new DefenderRelayProvider(credentials);
   const signer = new DefenderRelaySigner(credentials, provider, {
     speed: "fast",
   });
-  const receipts = main(signer);
+  const receipts = exports.main(signer);
 
   return receipts;
 };
