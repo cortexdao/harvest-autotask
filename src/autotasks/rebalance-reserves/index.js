@@ -4,6 +4,14 @@ const {
   DefenderRelayProvider,
 } = require("defender-relay-client/lib/ethers");
 
+const { getZapNames } = require("../../common/lpaccount");
+
+const {
+  getRebalanceAmounts,
+  normalizeRebalanceAmounts,
+} = require("../../common/mapt");
+
+const { getIndexPositions } = require("../../common/tvlmanager");
 
 const {
   TARGET_WEIGHTS,
@@ -113,6 +121,26 @@ exports.deployReserves = async (signer, normalizedAmounts, positions) => {
 };
 
 exports.main = async (signer) => {
+  const rebalanceAmounts = await getRebalanceAmounts(signer);
+
+  const normalizedAmounts = normalizeRebalanceAmounts(rebalanceAmounts);
+
+  const netRebalance = normalizedAmounts.reduce(
+    (net, { amount }) => (net += amount),
+    0n
+  );
+
+  const zapNames = await getZapNames(signer);
+  const positions = await getIndexPositions(signer, zapNames);
+
+  if (netRebalance > 0n) {
+    await exports.deployReserves(signer, normalizedAmounts, positions);
+  } else if (netRebalance < 0n) {
+  } else {
+    throw new Error("No rebalance is required");
+  }
+
+  return;
 };
 
 // Entrypoint for the Autotask
