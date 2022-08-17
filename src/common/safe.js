@@ -12,6 +12,9 @@ exports.getSafe = async (signer) => {
 
 exports.executeSafeTx = async (tx, safe) => {
   const safeTx = await safe.createTransaction(tx);
+
+  // Should not be necessary per SDK docs, however the tx fails without it
+  const signedSafeTx = await safe.signTransaction(safeTx);
   const baseGas = 100000;
 
   const options = {
@@ -22,7 +25,7 @@ exports.executeSafeTx = async (tx, safe) => {
     gasLimit: safeTx.data["safeTxGas"] + baseGas,
   };
 
-  const executedTx = await safe.executeTransaction(safeTx, options);
+  const executedTx = await safe.executeTransaction(signedSafeTx, options);
 
   // Cannot use `?.` operator here because the autotask env uses node 12
   // - Optional chaining with `.?` requires node 14
