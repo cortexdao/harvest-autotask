@@ -1,5 +1,6 @@
-const { default: Safe, EthersAdapter } = require("@gnosis.pm/safe-core-sdk");
 const { ethers } = require("ethers");
+const { default: Safe } = require("@gnosis.pm/safe-core-sdk");
+const { default: EthersAdapter } = require("@gnosis.pm/safe-ethers-lib");
 const { LP_SAFE_ADDRESS } = require("./constants");
 
 exports.getSafe = async (signer) => {
