@@ -54,9 +54,16 @@ exports.getTokenAmountToAddLiquity = async (lpAccount, signer) => {
     signer
   );
 
-  const largestExcessAmount = exports.getLargestAmount(normalizedExcessAmounts);
+  const { address: tokenAddress } = exports.getLargestAmount(
+    normalizedExcessAmounts
+  );
 
-  return largestExcessAmount;
+  const tokenAmountToAddLiquidity = {
+    address: tokenAddress,
+    amount: balances[tokenAddress],
+  };
+
+  return tokenAmountToAddLiquidity;
 };
 
 exports.main = async (signer) => {
