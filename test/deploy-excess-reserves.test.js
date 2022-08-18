@@ -1,13 +1,42 @@
 const { expect } = require("chai");
+const sinon = require("sinon");
+const {
+  impersonateAccount,
+  stopImpersonatingAccount,
+  setBalance,
+  takeSnapshot,
+} = require("@nomicfoundation/hardhat-network-helpers");
 
 const { MetaPoolToken } = require("../src/common/mapt");
-const {
-  getExcessReserveIds,
-} = require("../src/autotasks/deploy-excess-reserves/index");
+const { addOwnerWithThreshold } = require("./utils");
+const index = require("../src/autotasks/deploy-excess-reserves/index");
+const { getExcessReserveIds, main, handler } = index;
 
-const { RESERVE_POOLS, RESERVE_POOL_IDS } = require("../src/common/constants");
+const {
+  LP_SAFE_ADDRESS,
+  RESERVE_POOLS,
+  RESERVE_POOL_IDS,
+} = require("../src/common/constants");
 
 describe("Deploy excess reserves", () => {
+  let signer;
+
+  beforeEach(async () => {
+    snapshot = await takeSnapshot();
+  });
+
+  afterEach(async () => {
+    await snapshot.restore();
+  });
+
+  afterEach(() => {
+    sinon.restore();
+  });
+
+  before(async () => {
+    [signer] = await ethers.getSigners();
+  });
+
   describe("getExcessReserveIds", () => {
     it("should return an empty array if provided an empty array", () => {
       const rebalanceAmounts = [];
@@ -39,4 +68,37 @@ describe("Deploy excess reserves", () => {
       expect(reserveIds).to.deep.equal(expectedReserveIds);
     });
   });
+
+  describe("main", () => {
+    before(async () => {
+      await addOwnerWithThreshold(signer.address);
+    });
+
+    it("should return a tx receipt", async () => {
+      const receipt = await main(signer);
+      expect(receipt).to.include.all.keys("to", "from", "transactionHash");
+    });
+  });
+
+  const { RELAY_API_KEY: apiKey, RELAY_API_SECRET: apiSecret } = process.env;
+  if (apiKey && apiSecret) {
+    describe("handler", () => {
+      before(async () => {
+        await addOwnerWithThreshold(signer.address);
+      });
+
+      it("should return a tx receipt from main", async () => {
+        const expectedReceipt = {
+          to: ethers.constants.AddressZero,
+          from: ethers.constants.AddressZero,
+          transactionHash: "0x0",
+        };
+        sinon.replace(index, "main", () => Promise.resolve(expectedReceipt));
+
+        const receipt = await handler({ apiKey, apiSecret });
+
+        expect(receipt).to.deep.equal(expectedReceipt);
+      });
+    });
+  }
 });
