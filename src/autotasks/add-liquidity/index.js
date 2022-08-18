@@ -5,6 +5,7 @@ const {
 } = require("defender-relay-client/lib/ethers");
 
 const { RESERVE_POOLS } = require("../../common/constants");
+const { normalizeTokenAmounts } = require("../../common/utils");
 
 const { MetaPoolToken } = require("../../common/mapt");
 const { LpAccount } = require("../../common/lpaccount");
@@ -33,6 +34,29 @@ exports.getLargestAmount = (normalizedAmounts) => {
   const largestAmount = normalizedAmounts.reduce(getLargerAmount);
 
   return largestAmount;
+};
+
+exports.getTokenAmountToAddLiquity = async (lpAccount, signer) => {
+  const mapt = new MetaPoolToken(signer);
+  const rebalanceAmounts = await mapt.getRebalanceAmounts();
+
+  const balances = await lpAccount.getUnderlyerBalances();
+
+  const netExcessAmounts = exports.getUnderlyersWithNetExcess(
+    rebalanceAmounts,
+    balances
+  );
+
+  const normalizedDecimals = 18n;
+  const normalizedExcessAmounts = await normalizeTokenAmounts(
+    netExcessAmounts,
+    normalizedDecimals,
+    signer
+  );
+
+  const largestExcessAmount = exports.getLargestAmount(normalizedExcessAmounts);
+
+  return largestExcessAmount;
 };
 
 exports.main = async (signer) => {
