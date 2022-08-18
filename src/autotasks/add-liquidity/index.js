@@ -4,7 +4,28 @@ const {
   DefenderRelayProvider,
 } = require("defender-relay-client/lib/ethers");
 
-exports.main = async (signer) => {};
+const { RESERVE_POOLS } = require("../../common/constants");
+
+const { MetaPoolToken } = require("../../common/mapt");
+const { LpAccount } = require("../../common/lpaccount");
+
+exports.getUnderlyersWithNetExcess = (rebalanceAmounts, balances) => {
+  // Negative rebalance amount indicates excess reserves
+  const getNetAmount = ({ address, amount }) => {
+    const underlyer = RESERVE_POOLS[address].underlyer;
+    const netAmount = balances[underlyer] - amount;
+    return { address: underlyer, amount: netAmount };
+  };
+
+  const netAmounts = rebalanceAmounts.map(getNetAmount);
+  const filteredAmounts = netAmounts.filter(({ amount }) => amount > 0n);
+  const addresses = filteredAmounts.map(({ address }) => address);
+
+  return addresses;
+};
+
+exports.main = async (signer) => {
+};
 
 // Entrypoint for the Autotask
 exports.handler = async (credentials) => {
