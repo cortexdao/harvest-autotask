@@ -23,6 +23,18 @@ exports.getUnderlyersWithNetExcess = (rebalanceAmounts, balances) => {
   return filteredAmounts;
 };
 
+exports.getLargestAmount = (normalizedAmounts) => {
+  if (normalizedAmounts.length === 0) {
+    return [];
+  }
+
+  const getLargerAmount = (largest, amount) =>
+    amount.amount > largest.amount ? amount : largest;
+  const largestAmount = normalizedAmounts.reduce(getLargerAmount);
+
+  return largestAmount;
+};
+
 exports.main = async (signer) => {
 };
 
