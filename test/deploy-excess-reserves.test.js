@@ -19,6 +19,8 @@ const {
 } = require("../src/common/constants");
 
 describe("Deploy excess reserves", () => {
+  let initialSnapshot;
+  let snapshot;
   let signer;
 
   beforeEach(async () => {
@@ -34,7 +36,19 @@ describe("Deploy excess reserves", () => {
   });
 
   before(async () => {
+    initialSnapshot = await takeSnapshot();
+  });
+
+  before(async () => {
     [signer] = await ethers.getSigners();
+  });
+
+  before(async () => {
+    await addOwnerWithThreshold(signer.address);
+  });
+
+  after(async () => {
+    await initialSnapshot.restore();
   });
 
   describe("getExcessReserveIds", () => {
@@ -70,10 +84,6 @@ describe("Deploy excess reserves", () => {
   });
 
   describe("main", () => {
-    before(async () => {
-      await addOwnerWithThreshold(signer.address);
-    });
-
     it("should return a tx receipt", async () => {
       const receipt = await main(signer);
       expect(receipt).to.include.all.keys("to", "from", "transactionHash");
@@ -83,10 +93,6 @@ describe("Deploy excess reserves", () => {
   const { RELAY_API_KEY: apiKey, RELAY_API_SECRET: apiSecret } = process.env;
   if (apiKey && apiSecret) {
     describe("handler", () => {
-      before(async () => {
-        await addOwnerWithThreshold(signer.address);
-      });
-
       it("should return a tx receipt from main", async () => {
         const expectedReceipt = {
           to: ethers.constants.AddressZero,

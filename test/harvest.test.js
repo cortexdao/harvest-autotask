@@ -45,6 +45,7 @@ use(smock.matchers);
 use(chaiAsPromised);
 
 describe("Harvest Autotask", () => {
+  let initialSnapshot;
   let snapshot;
   let signer;
   let lpAccount;
@@ -62,12 +63,20 @@ describe("Harvest Autotask", () => {
   });
 
   before(async () => {
+    initialSnapshot = await takeSnapshot();
+  });
+
+  before(async () => {
     [signer] = await ethers.getSigners();
     lpAccount = new ethers.Contract(LP_ACCOUNT_ADDRESS, lpAccountAbi, signer);
   });
 
   before(async () => {
     await addOwnerWithThreshold(signer.address);
+  });
+
+  after(async () => {
+    await initialSnapshot.restore();
   });
 
   describe("getLpBalances", () => {
