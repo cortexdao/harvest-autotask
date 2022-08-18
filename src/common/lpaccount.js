@@ -1,8 +1,38 @@
 const { ethers } = require("ethers");
 const coingecko = require("./coingecko");
-const { LP_ACCOUNT_ADDRESS, SWAPS } = require("./constants");
+const { LP_ACCOUNT_ADDRESS, SWAPS, RESERVE_POOLS } = require("./constants");
 const erc20Abi = require("../abis/ERC20.json");
 const lpAccountAbi = require("../abis/LpAccountV2.json");
+
+exports.LpAccount = class {
+  constructor(signer) {
+    this.signer = signer;
+    this.contract = new ethers.Contract(
+      LP_ACCOUNT_ADDRESS,
+      lpAccountAbi,
+      signer
+    );
+  }
+
+  async getUnderlyerBalances() {
+    const underlyerAddresses = Object.values(RESERVE_POOLS).map(
+      ({ underlyer }) => underlyer
+    );
+
+    const getTokenInstance = (address) =>
+      new ethers.Contract(address, erc20Abi, this.signer);
+    const underlyers = underlyerAddresses.map(getTokenInstance);
+
+    const getBalance = async (token) => [
+      token.address,
+      (await token.balanceOf(LP_ACCOUNT_ADDRESS)).toBigInt(),
+    ];
+    const balanceEntries = await Promise.all(underlyers.map(getBalance));
+    const balances = Object.fromEntries(balanceEntries);
+
+    return balances;
+  }
+};
 
 exports.getZapNames = async (signer) => {
   const lpAccount = new ethers.Contract(
