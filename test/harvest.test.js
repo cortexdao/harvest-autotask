@@ -28,6 +28,8 @@ const { claimWithSafe, swapWithSafe, main } = index;
 const safeHelpers = require("../src/common/safe");
 const { getSafe, executeSafeTx } = safeHelpers;
 
+const { addOwnerWithThreshold } = require("./utils");
+
 const {
   LP_SAFE_ADDRESS,
   LP_ACCOUNT_ADDRESS,
@@ -62,6 +64,10 @@ describe("Harvest Autotask", () => {
   before(async () => {
     [signer] = await ethers.getSigners();
     lpAccount = new ethers.Contract(LP_ACCOUNT_ADDRESS, lpAccountAbi, signer);
+  });
+
+  before(async () => {
+    await addOwnerWithThreshold(signer.address);
   });
 
   describe("getLpBalances", () => {
@@ -411,6 +417,7 @@ describe("Harvest Autotask", () => {
       };
       const safe = {
         createTransaction: () => Promise.resolve(safeTx),
+        signTransaction: () => Promise.resolve(safeTx),
         executeTransaction: () => Promise.resolve(executedTx),
       };
 
@@ -426,6 +433,7 @@ describe("Harvest Autotask", () => {
       const executedTx = {};
       const safe = {
         createTransaction: () => Promise.resolve(safeTx),
+        signTransaction: () => Promise.resolve(safeTx),
         executeTransaction: () => Promise.resolve(executedTx),
       };
 
@@ -494,9 +502,6 @@ describe("Harvest Autotask", () => {
   });
 
   describe("main", () => {
-    const ownerAddress = "0x893531C5E2c2af2a1F8DD03760843A3513f02AB8";
-    let owner;
-
     beforeEach(() => {
       const tokenPrices = {
         // Prices at pegged block #15311844
@@ -509,18 +514,8 @@ describe("Harvest Autotask", () => {
       sinon.replace(coingecko, "getTokenPrice", getTokenPriceFake);
     });
 
-    before(async () => {
-      await impersonateAccount(ownerAddress);
-      await setBalance(ownerAddress, 10n ** 18n);
-      owner = await ethers.getSigner(ownerAddress);
-    });
-
-    after(async () => {
-      await stopImpersonatingAccount(ownerAddress);
-    });
-
     it("should return tx receipts for claim and swaps", async () => {
-      const { claimReceipt, swapReceipts } = await main(owner);
+      const { claimReceipt, swapReceipts } = await main(signer);
 
       const expectedKeys = [
         "gasUsed",
@@ -537,7 +532,7 @@ describe("Harvest Autotask", () => {
     });
 
     it("should have sufficient gas left", async () => {
-      const { claimReceipt, swapReceipts } = await main(owner);
+      const { claimReceipt, swapReceipts } = await main(signer);
       const { gasUsed } = claimReceipt;
       const { gasLimit } = await ethers.provider.getTransaction(
         claimReceipt.transactionHash
@@ -561,24 +556,24 @@ describe("Harvest Autotask", () => {
     });
 
     it("should execute the transaction from the safe owner", async () => {
-      const { claimReceipt, swapReceipts } = await main(owner);
-      expect(claimReceipt.from).to.equal(ownerAddress);
+      const { claimReceipt, swapReceipts } = await main(signer);
+      expect(claimReceipt.from).to.equal(signer.address);
       expect(swapReceipts).to.satisfy((receipts) =>
-        receipts.every((receipt) => receipt.from == ownerAddress)
+        receipts.every((receipt) => receipt.from == signer.address)
       );
     });
 
     it("should call the `LpAccount` swap function for each swap", async () => {
       // Claim reward tokens before LpAccount is mocked
-      const safe = await getSafe(owner);
-      await claimWithSafe(safe, owner);
+      const safe = await getSafe(signer);
+      await claimWithSafe(safe, signer);
 
       const lpAccountFake = await smock.fake(lpAccountAbi, {
         address: lpAccount.address,
       });
       lpAccountFake.swap.returns();
 
-      await main(owner);
+      await main(signer);
 
       expect(lpAccountFake.swap).to.have.called;
     });
@@ -592,13 +587,13 @@ describe("Harvest Autotask", () => {
       });
       lpAccountFake.claim.returns();
 
-      await main(owner);
+      await main(signer);
 
       expect(lpAccountFake.claim).to.have.called;
     });
 
     it("should not repay the safe owner for gas", async () => {
-      expect(await main(owner)).to.changeEtherBalance(owner, 0);
+      expect(await main(signer)).to.changeEtherBalance(signer, 0);
     });
   });
 });
