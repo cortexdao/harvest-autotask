@@ -19,9 +19,8 @@ exports.getUnderlyersWithNetExcess = (rebalanceAmounts, balances) => {
 
   const netAmounts = rebalanceAmounts.map(getNetAmount);
   const filteredAmounts = netAmounts.filter(({ amount }) => amount > 0n);
-  const addresses = filteredAmounts.map(({ address }) => address);
 
-  return addresses;
+  return filteredAmounts;
 };
 
 exports.main = async (signer) => {
