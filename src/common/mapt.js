@@ -42,7 +42,7 @@ exports.MetaPoolToken = class {
     return rebalanceAmounts;
   }
 
-  async createFundLpAccountTx(reserveIds) {
+  createFundLpAccountTx(reserveIds) {
     const tx = createTx(this.contract, "fundLpAccount", [reserveIds]);
     return tx;
   }
