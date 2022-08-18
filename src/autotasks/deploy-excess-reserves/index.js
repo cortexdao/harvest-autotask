@@ -43,7 +43,7 @@ exports.handler = async (credentials) => {
   const signer = new DefenderRelaySigner(credentials, provider, {
     speed: "fast",
   });
-  const receipt = exports.main(signer);
+  const receipt = await exports.main(signer);
 
   return receipt;
 };
