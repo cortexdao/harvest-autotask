@@ -5,68 +5,29 @@ const {
 } = require("defender-relay-client/lib/ethers");
 
 const { RESERVE_POOLS } = require("../../common/constants");
-const { normalizeTokenAmounts } = require("../../common/utils");
 
 const { MetaPoolToken } = require("../../common/mapt");
 const { LpAccount } = require("../../common/lpaccount");
+const { TvlManager } = require("../../common/tvlmanager");
 
-exports.getUnderlyersWithNetExcess = (rebalanceAmounts, balances) => {
-  // Negative rebalance amount indicates excess reserves
-  const getNetAmount = ({ address, amount }) => {
-    const underlyer = RESERVE_POOLS[address].underlyer;
-    const netAmount = balances[underlyer] - amount;
-    return { address: underlyer, amount: netAmount };
-  };
-
-  const netAmounts = rebalanceAmounts.map(getNetAmount);
-  const filteredAmounts = netAmounts.filter(({ amount }) => amount > 0n);
-
-  return filteredAmounts;
-};
-
-exports.getLargestAmount = (normalizedAmounts) => {
-  if (normalizedAmounts.length === 0) {
-    return [];
-  }
-
-  const getLargerAmount = (largest, amount) =>
-    amount.amount > largest.amount ? amount : largest;
-  const largestAmount = normalizedAmounts.reduce(getLargerAmount);
-
-  return largestAmount;
-};
-
-exports.getTokenAmountToAddLiquity = async (lpAccount, signer) => {
+exports.main = async (signer) => {
   const mapt = new MetaPoolToken(signer);
   const rebalanceAmounts = await mapt.getRebalanceAmounts();
 
-  const balances = await lpAccount.getUnderlyerBalances();
-
-  const netExcessAmounts = exports.getUnderlyersWithNetExcess(
-    rebalanceAmounts,
-    balances
+  const lpAccount = new LpAccount(signer);
+  const tokenAmountToAddLiquidity = await lpAccount.getTokenAmountToAddLiquity(
+    rebalanceAmounts
   );
 
-  const normalizedDecimals = 18n;
-  const normalizedExcessAmounts = await normalizeTokenAmounts(
-    netExcessAmounts,
-    normalizedDecimals,
-    signer
-  );
+  if (tokenAmountToAddLiquidity === undefined) {
+    return {};
+  }
 
-  const { address: tokenAddress } = exports.getLargestAmount(
-    normalizedExcessAmounts
-  );
+  const tvlManager = new TvlManager(signer);
 
-  const tokenAmountToAddLiquidity = {
-    address: tokenAddress,
-    amount: balances[tokenAddress],
-  };
-
-  return tokenAmountToAddLiquidity;
-};
-
-exports.main = async (signer) => {
+  const names = await lpAccount.getZapNames();
+  const positions = await tvlManager.getIndexPositions(names);
+  const largestPositionDelta = tvlManager.getLargestPositionDelta(positions);
 };
 
 // Entrypoint for the Autotask
