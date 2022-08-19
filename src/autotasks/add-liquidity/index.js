@@ -4,30 +4,18 @@ const {
   DefenderRelayProvider,
 } = require("defender-relay-client/lib/ethers");
 
-const { RESERVE_POOLS } = require("../../common/constants");
+const { executeSafeTx, getSafe } = require("../../common/safe");
 
-const { MetaPoolToken } = require("../../common/mapt");
-const { LpAccount } = require("../../common/lpaccount");
-const { TvlManager } = require("../../common/tvlmanager");
+const { Strategy } = require("../../common/strategy");
 
 exports.main = async (signer) => {
-  const mapt = new MetaPoolToken(signer);
-  const rebalanceAmounts = await mapt.getRebalanceAmounts();
+  const strategy = new Strategy(signer);
+  const nextAddLiquidityTx = await strategy.getNextAddLiquidityTx();
 
-  const lpAccount = new LpAccount(signer);
-  const tokenAmountToAddLiquidity = await lpAccount.getTokenAmountToAddLiquity(
-    rebalanceAmounts
-  );
+  const safe = await getSafe(signer);
+  const receipt = await executeSafeTx(nextAddLiquidityTx, safe);
 
-  if (tokenAmountToAddLiquidity === undefined) {
-    return {};
-  }
-
-  const tvlManager = new TvlManager(signer);
-
-  const names = await lpAccount.getZapNames();
-  const positions = await tvlManager.getIndexPositions(names);
-  const largestPositionDelta = tvlManager.getLargestPositionDelta(positions);
+  return receipt;
 };
 
 // Entrypoint for the Autotask

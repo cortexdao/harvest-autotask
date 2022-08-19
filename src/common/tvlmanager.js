@@ -4,8 +4,6 @@ const {
   TVL_MANAGER_ADDRESS,
   LP_ACCOUNT_ADDRESS,
   USD_DECIMALS,
-  TARGET_WEIGHTS,
-  WEIGHT_DECIMALS,
 } = require("./constants");
 
 const tvlManagerAbi = require("../abis/TvlManager.json");
@@ -108,41 +106,5 @@ exports.TvlManager = class {
     const sumNav = (nav, { value }) => (nav += value);
     const nav = positions.reduce(sumNav, 0n);
     return nav;
-  }
-
-  getTargetValues(positions) {
-    const nav = this.getNav(positions);
-
-    const getTargetValue = ({ name, weight }) => {
-      const value = (weight * nav) / 10n ** WEIGHT_DECIMALS;
-      return [name, value];
-    };
-
-    const targetValueEntries = TARGET_WEIGHTS.map(getTargetValue);
-    const targetValues = Object.fromEntries(targetValueEntries);
-
-    return targetValues;
-  }
-
-  getPositionDeltas(positions) {
-    const targetValues = this.getTargetValues(positions);
-
-    const getDelta = ({ name, value }) => {
-      const target = targetValues[name] || 0n;
-      return { name, delta: target - value };
-    };
-
-    const positionDeltas = positions.map(getDelta);
-    return positionDeltas;
-  }
-
-  getLargestPositionDelta(positions) {
-    const positionDeltas = this.getPositionDeltas(positions);
-
-    const getLargerDelta = (largest, position) =>
-      position.delta > largest.delta ? position : largest;
-
-    const largestPositionDelta = positionDeltas.reduce(getLargerDelta);
-    return largestPositionDelta;
   }
 };

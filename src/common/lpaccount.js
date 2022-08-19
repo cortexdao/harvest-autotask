@@ -1,7 +1,12 @@
 const { ethers } = require("ethers");
 const coingecko = require("./coingecko");
-const { normalizeTokenAmounts } = require("./utils");
-const { LP_ACCOUNT_ADDRESS, SWAPS, RESERVE_POOLS } = require("./constants");
+const { createTx } = require("./utils");
+const {
+  LP_ACCOUNT_ADDRESS,
+  SWAPS,
+  RESERVE_POOLS,
+  INDEX_POSITIONS,
+} = require("./constants");
 const erc20Abi = require("../abis/ERC20.json");
 const lpAccountAbi = require("../abis/LpAccountV2.json");
 
@@ -44,70 +49,25 @@ exports.LpAccount = class {
     return zapNames;
   }
 
-  getUnderlyersWithNetExcess(rebalanceAmounts, balances) {
-    // Negative rebalance amount indicates excess reserves
-    const getNetAmount = ({ address, amount }) => {
-      const underlyer = RESERVE_POOLS[address].underlyer;
-      const netAmount = balances[underlyer] - amount;
-      return { address: underlyer, amount: netAmount };
-    };
+  getDeployParams(name, { address, amount }) {
+    const { underlyers } = INDEX_POSITIONS[name];
+    const index = underlyers.indexOf(address);
 
-    const netAmounts = rebalanceAmounts.map(getNetAmount);
-
-    const getExcessAmount = ({ amount }) => amount > 0n;
-    const filteredAmounts = netAmounts.filter(getExcessAmount);
-
-    return filteredAmounts;
-  }
-
-  getLargestAmount(normalizedAmounts) {
-    if (normalizedAmounts.length === 0) {
-      return undefined;
+    if (index < 0) {
+      throw new Error(
+        "Position is not configured, cannot create deployStrategy params"
+      );
     }
 
-    const getLargerAmount = (largest, amount) =>
-      amount.amount > largest.amount ? amount : largest;
-    const largestAmount = normalizedAmounts.reduce(getLargerAmount);
+    const amounts = new Array(underlyers.length).fill(0n);
+    amounts[index] = amount;
 
-    return largestAmount;
+    return [name, amounts];
   }
 
-  async getLargestNetExcess(rebalanceAmounts, balances) {
-    const netExcessAmounts = this.getUnderlyersWithNetExcess(
-      rebalanceAmounts,
-      balances
-    );
-
-    const normalizedDecimals = 18n;
-    const normalizedExcessAmounts = await normalizeTokenAmounts(
-      netExcessAmounts,
-      normalizedDecimals,
-      this.signer
-    );
-
-    const largestNetExcess = this.getLargestAmount(normalizedExcessAmounts);
-
-    return largestNetExcess;
-  }
-
-  async getTokenAmountToAddLiquity(rebalanceAmounts) {
-    const balances = await this.getUnderlyerBalances();
-
-    const tokenAmount = await this.getLargestNetExcess(
-      rebalanceAmounts,
-      balances
-    );
-
-    if (tokenAmount === undefined) {
-      return undefined;
-    }
-
-    const tokenAmountToAddLiquidity = {
-      address: tokenAmount.address,
-      amount: balances[tokenAmount.address],
-    };
-
-    return tokenAmountToAddLiquidity;
+  createDeployStrategyTx(name, amounts) {
+    const tx = createTx(this.contract, "deployStrategy", [name, amounts]);
+    return tx;
   }
 };
 

@@ -3,6 +3,7 @@ const { toBigInt } = require("./utils");
 // Global constants
 exports.USD_DECIMALS = 8n;
 exports.COINGECKO_PRICE_DECIMALS = 18n;
+exports.MAX_ADD_LIQUIDITY = toBigInt("20000", exports.USD_DECIMALS);
 
 // Safes
 exports.LP_SAFE_ADDRESS = "0x5b79121EA6dC2395B8046eCDCE14D66c2bF221B0";
@@ -61,20 +62,49 @@ exports.DEPEG_THRESHOLDS = {
   [exports.MIM_ADDRESS]: 0.9,
 };
 
-exports.CURVE_POOLS = {
-  [exports.THREEPOOL_STABLESWAP_ADDRESS]: threePool,
-  [exports.MUSD_STABLESWAP_ADDRESS]: [exports.MUSD_ADDRESS, ...threePool],
-  [exports.FRAX_STABLESWAP_ADDRESS]: [exports.FRAX_ADDRESS, ...threePool],
-  [exports.FRAXUSDC_STABLESWAP_ADDRESS]: [
-    exports.FRAX_ADDRESS,
-    exports.USDC_ADDRESS,
-  ],
-  [exports.SUSD_STABLESWAP_ADDRESS]: [...threePool, exports.SUSD_ADDRESS],
-  [exports.BUSD_V2_STABLESWAP_ADDRESS]: [exports.BUSD_ADDRESS, ...threePool],
-  [exports.DOLA_STABLESWAP_ADDRESS]: [exports.DOLA_ADDRESS, ...threePool],
-  [exports.MIM_STABLESWAP_ADDRESS]: [exports.MIM_ADDRESS, ...threePool],
-  [exports.IB_STABLESWAP_ADDRESS]: [...threePool],
+exports.INDEX_POSITIONS = {
+  "convex-3pool": {
+    address: exports.THREEPOOL_STABLESWAP_ADDRESS,
+    underlyers: threePool,
+  },
+  "convex-musd": {
+    address: exports.MUSD_STABLESWAP_ADDRESS,
+    underlyers: [exports.MUSD_ADDRESS, ...threePool],
+  },
+  "convex-frax": {
+    address: exports.FRAX_STABLESWAP_ADDRESS,
+    underlyers: [exports.FRAX_ADDRESS, ...threePool],
+  },
+  "convex-fraxusdc": {
+    address: exports.FRAXUSDC_STABLESWAP_ADDRESS,
+    underlyers: [exports.FRAX_ADDRESS, exports.USDC_ADDRESS],
+  },
+  "convex-susdv2": {
+    address: exports.SUSD_STABLESWAP_ADDRESS,
+    underlyers: [...threePool, exports.SUSD_ADDRESS],
+  },
+  "convex-busdv2": {
+    address: exports.BUSD_V2_STABLESWAP_ADDRESS,
+    underlyers: [exports.BUSD_ADDRESS, ...threePool],
+  },
+  "convex-dola": {
+    address: exports.DOLA_STABLESWAP_ADDRESS,
+    underlyers: [exports.DOLA_ADDRESS, ...threePool],
+  },
+  "convex-mim": {
+    address: exports.MIM_STABLESWAP_ADDRESS,
+    underlyers: [exports.MIM_ADDRESS, ...threePool],
+  },
+  "convex-ironbank": {
+    address: exports.IB_STABLESWAP_ADDRESS,
+    underlyers: [...threePool],
+  },
 };
+
+const curvePoolEntries = Object.values(exports.INDEX_POSITIONS).map(
+  ({ address, underlyers }) => [address, underlyers]
+);
+exports.CURVE_POOLS = Object.fromEntries(curvePoolEntries);
 
 exports.SWAPS = {
   CRV: {
@@ -132,3 +162,9 @@ exports.TARGET_WEIGHTS = [
 ].map(({ name, weight }) => {
   return { name, weight: toBigInt(weight, exports.WEIGHT_DECIMALS - 2n) };
 });
+
+exports.POSITION_ADD_PCT_DECIMALS = 8n;
+exports.POSITION_ADD_PCT = toBigInt(
+  "20", // 20%
+  exports.POSITION_ADD_PCT_DECIMALS - 2n
+);
