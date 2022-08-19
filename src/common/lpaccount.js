@@ -1,5 +1,6 @@
 const { ethers } = require("ethers");
 const coingecko = require("./coingecko");
+const { normalizeTokenAmounts } = require("./utils");
 const { LP_ACCOUNT_ADDRESS, SWAPS, RESERVE_POOLS } = require("./constants");
 const erc20Abi = require("../abis/ERC20.json");
 const lpAccountAbi = require("../abis/LpAccountV2.json");
@@ -31,6 +32,75 @@ exports.LpAccount = class {
     const balances = Object.fromEntries(balanceEntries);
 
     return balances;
+  }
+
+  async getZapNames() {
+    const zapNames = await this.contract.zapNames();
+    return zapNames;
+  }
+
+  getUnderlyersWithNetExcess(rebalanceAmounts, balances) {
+    // Negative rebalance amount indicates excess reserves
+    const getNetAmount = ({ address, amount }) => {
+      const underlyer = RESERVE_POOLS[address].underlyer;
+      const netAmount = balances[underlyer] - amount;
+      return { address: underlyer, amount: netAmount };
+    };
+
+    const netAmounts = rebalanceAmounts.map(getNetAmount);
+    const filteredAmounts = netAmounts.filter(({ amount }) => amount > 0n);
+
+    return filteredAmounts;
+  }
+
+  getLargestAmount(normalizedAmounts) {
+    if (normalizedAmounts.length === 0) {
+      return undefined;
+    }
+
+    const getLargerAmount = (largest, amount) =>
+      amount.amount > largest.amount ? amount : largest;
+    const largestAmount = normalizedAmounts.reduce(getLargerAmount);
+
+    return largestAmount;
+  }
+
+  async getLargestNetExcess(rebalanceAmounts, balances) {
+    const netExcessAmounts = this.getUnderlyersWithNetExcess(
+      rebalanceAmounts,
+      balances
+    );
+
+    const normalizedDecimals = 18n;
+    const normalizedExcessAmounts = await normalizeTokenAmounts(
+      netExcessAmounts,
+      normalizedDecimals,
+      this.signer
+    );
+
+    const largestNetExcess = this.getLargestAmount(normalizedExcessAmounts);
+
+    return largestNetExcess;
+  }
+
+  async getTokenAmountToAddLiquity(rebalanceAmounts) {
+    const balances = await this.getUnderlyerBalances();
+
+    const tokenAmount = await this.getLargestNetExcess(
+      rebalanceAmounts,
+      balances
+    );
+
+    if (tokenAmount === undefined) {
+      return undefined;
+    }
+
+    const tokenAmountToAddLiquidity = {
+      address: tokenAmount.address,
+      amount: balances[tokenAmount.address],
+    };
+
+    return tokenAmountToAddLiquidity;
   }
 };
 
