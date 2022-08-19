@@ -25,8 +25,9 @@ exports.TvlManager = class {
     const getAllocationAddress = (name) =>
       this.contract.getAssetAllocation(name);
 
+    const allocationAddressPromises = allocationNames.map(getAllocationAddress);
     const allocationAddressResults = await Promise.all(
-      allocationNames.map(getAllocationAddress)
+      allocationAddressPromises
     );
 
     const isAddressZero = (address) => address !== ethers.constants.AddressZero;
@@ -73,10 +74,10 @@ exports.TvlManager = class {
   }
 
   async getValue(tokens, tokenPrices, allocation, i) {
-    const tokenValuePromises = tokens[i].map((token, i) =>
-      this.getTokenValue(tokenPrices, allocation, token, i)
-    );
+    const getTokenValue = (token, i) =>
+      this.getTokenValue(tokenPrices, allocation, token, i);
 
+    const tokenValuePromises = tokens[i].map(getTokenValue);
     const tokenValues = await Promise.all(tokenValuePromises);
 
     const value = tokenValues.reduce((a, b) => a + b);
@@ -89,43 +90,49 @@ exports.TvlManager = class {
     const allocations = await this.getAllocations(allocationNames);
 
     const getTokens = (allocation) => allocation.tokens();
-    const tokens = await Promise.all(allocations.map(getTokens));
+    const tokenPromises = allocations.map(getTokens);
+    const tokens = await Promise.all(tokenPromises);
 
     const tokenPrices = await this.getAllocationTokenPrices(tokens);
 
-    const positionPromises = allocations.map((allocation, i) =>
-      this.getValue(tokens, tokenPrices, allocation, i)
-    );
+    const getPosition = (allocation, i) =>
+      this.getValue(tokens, tokenPrices, allocation, i);
+
+    const positionPromises = allocations.map(getPosition);
     const positions = await Promise.all(positionPromises);
 
     return positions;
   }
 
   getNav(positions) {
-    const nav = positions.reduce((nav, { value }) => (nav += value), 0n);
+    const sumNav = (nav, { value }) => (nav += value);
+    const nav = positions.reduce(sumNav, 0n);
     return nav;
   }
 
   getTargetValues(positions) {
     const nav = this.getNav(positions);
 
-    const targetValueEntries = TARGET_WEIGHTS.map(({ name, weight }) => {
+    const getTargetValue = ({ name, weight }) => {
       const value = (weight * nav) / 10n ** WEIGHT_DECIMALS;
       return [name, value];
-    });
+    };
 
+    const targetValueEntries = TARGET_WEIGHTS.map(getTargetValue);
     const targetValues = Object.fromEntries(targetValueEntries);
+
     return targetValues;
   }
 
   getPositionDeltas(positions) {
     const targetValues = this.getTargetValues(positions);
 
-    const positionDeltas = positions.map(({ name, value }) => {
+    const getDelta = ({ name, value }) => {
       const target = targetValues[name] || 0n;
       return { name, delta: target - value };
-    });
+    };
 
+    const positionDeltas = positions.map(getDelta);
     return positionDeltas;
   }
 
@@ -136,7 +143,6 @@ exports.TvlManager = class {
       position.delta > largest.delta ? position : largest;
 
     const largestPositionDelta = positionDeltas.reduce(getLargerDelta);
-
     return largestPositionDelta;
   }
 };

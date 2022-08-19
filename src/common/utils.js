@@ -21,18 +21,22 @@ exports.createTx = (contract, fragment, values = []) => {
   return tx;
 };
 
+exports.convertTokenAmountDecimals = async (
+  { address, amount },
+  decimals,
+  signer
+) => {
+  const token = new ethers.Contract(address, erc20Abi, signer);
+  const underlyerDecimals = BigInt(await token.decimals());
+  const normalizedAmount =
+    (amount * 10n ** decimals) / 10n ** underlyerDecimals;
+  return { address, amount: normalizedAmount };
+};
+
 exports.normalizeTokenAmounts = async (tokenAmounts, decimals, signer) => {
-  const getNormalizedAmount = async ({ address, amount }) => {
-    const token = new ethers.Contract(address, erc20Abi, signer);
-    const underlyerDecimals = BigInt(await token.decimals());
-    const normalizedAmount =
-      (amount * 10n ** decimals) / 10n ** underlyerDecimals;
-    return { address, amount: normalizedAmount };
-  };
-
-  const normalizedAmounts = await Promise.all(
-    tokenAmounts.map(getNormalizedAmount)
-  );
-
+  const getNormalizedAmount = (tokenAmount) =>
+    exports.convertTokenAmountDecimals(tokenAmount, decimals, signer);
+  const normalizedAmountPromises = tokenAmounts.map(getNormalizedAmount);
+  const normalizedAmounts = await Promise.all(normalizedAmountPromises);
   return normalizedAmounts;
 };

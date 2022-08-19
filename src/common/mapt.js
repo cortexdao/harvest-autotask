@@ -35,9 +35,11 @@ exports.MetaPoolToken = class {
   async getRebalanceAmounts() {
     const result = await this.contract.getRebalanceAmounts(RESERVE_POOL_IDS);
 
-    const rebalanceAmounts = result[0].map((address, i) => {
+    const createAmountObj = (address, i) => {
       return { address, amount: result[1][i].toBigInt() };
-    });
+    };
+
+    const rebalanceAmounts = result[0].map(createAmountObj);
 
     return rebalanceAmounts;
   }

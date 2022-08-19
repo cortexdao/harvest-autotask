@@ -16,19 +16,24 @@ exports.LpAccount = class {
   }
 
   async getUnderlyerBalances() {
-    const underlyerAddresses = Object.values(RESERVE_POOLS).map(
-      ({ underlyer }) => underlyer
-    );
+    const reservePools = Object.values(RESERVE_POOLS);
+    const getUnderlyerAddress = ({ underlyer }) => underlyer;
+    const underlyerAddresses = reservePools.map(getUnderlyerAddress);
 
     const getTokenInstance = (address) =>
       new ethers.Contract(address, erc20Abi, this.signer);
     const underlyers = underlyerAddresses.map(getTokenInstance);
 
-    const getBalance = async (token) => [
+    const getBalance = async (token) =>
+      (await token.balanceOf(LP_ACCOUNT_ADDRESS)).toBigInt();
+
+    const getBalanceEntry = async (token) => [
       token.address,
-      (await token.balanceOf(LP_ACCOUNT_ADDRESS)).toBigInt(),
+      await getBalance(token),
     ];
-    const balanceEntries = await Promise.all(underlyers.map(getBalance));
+
+    const balancePromises = underlyers.map(getBalanceEntry);
+    const balanceEntries = await Promise.all(balancePromises);
     const balances = Object.fromEntries(balanceEntries);
 
     return balances;
@@ -48,7 +53,9 @@ exports.LpAccount = class {
     };
 
     const netAmounts = rebalanceAmounts.map(getNetAmount);
-    const filteredAmounts = netAmounts.filter(({ amount }) => amount > 0n);
+
+    const getExcessAmount = ({ amount }) => amount > 0n;
+    const filteredAmounts = netAmounts.filter(getExcessAmount);
 
     return filteredAmounts;
   }
