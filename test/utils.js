@@ -23,3 +23,15 @@ exports.addOwnerWithThreshold = async (owner) => {
 
   return tx;
 };
+
+exports.forceTransfer = async (token, from, to, amount) => {
+  await impersonateAccount(from);
+  await setBalance(from, 10n ** 18n);
+  const fromSigner = await ethers.getSigner(from);
+
+  const tx = await token.connect(fromSigner).transfer(to, amount);
+
+  await stopImpersonatingAccount(from);
+
+  return tx;
+};
