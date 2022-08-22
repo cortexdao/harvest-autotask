@@ -93,7 +93,7 @@ exports.Strategy = class {
 
   getLargestAmount(normalizedAmounts) {
     if (normalizedAmounts.length === 0) {
-      return undefined;
+      throw new RangeError("Unable to get largest amount from empty array");
     }
 
     const getLargerAmount = (largest, amount) =>
@@ -125,13 +125,14 @@ exports.Strategy = class {
     const rebalanceAmounts = await this.mapt.getRebalanceAmounts();
     const balances = await this.lpAccount.getUnderlyerBalances();
 
-    const tokenAmount = await this.getLargestNetExcess(
-      rebalanceAmounts,
-      balances
-    );
+    let tokenAmount;
 
-    if (tokenAmount === undefined) {
-      return undefined;
+    try {
+      tokenAmount = await this.getLargestNetExcess(rebalanceAmounts, balances);
+    } catch (error) {
+      throw new Error(
+        `Unable to get the next balance amount: ${error.message}`
+      );
     }
 
     const nextBalanceAmount = {
@@ -176,12 +177,15 @@ exports.Strategy = class {
   }
 
   async getNextAddLiquidityTx() {
-    const nextBalanceAmount = await this.getNextBalanceAmount();
-    const nextPosition = await this.getNextPosition();
+    let nextBalanceAmount;
 
-    if (nextBalanceAmount === undefined) {
-      return {};
+    try {
+      nextBalanceAmount = await this.getNextBalanceAmount();
+    } catch (error) {
+      throw new Error(`Unable to create tx to add liquidity: ${error.message}`);
     }
+
+    const nextPosition = await this.getNextPosition();
 
     const addLiquidityValue = await this.getNextAddLiquidityValue(
       nextBalanceAmount,
