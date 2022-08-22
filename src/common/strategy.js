@@ -164,7 +164,7 @@ exports.Strategy = class {
   }
 
   async getNextAddLiquidityValue(nextBalanceAmount, nextPosition) {
-    const possibleNextValues = await getPossibleNextAddLiquidityValues(
+    const possibleNextValues = await this.getPossibleNextAddLiquidityValues(
       nextBalanceAmount,
       nextPosition
     );
