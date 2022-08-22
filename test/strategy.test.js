@@ -177,4 +177,48 @@ describe("Index strategy", () => {
       ).to.throw(TypeError);
     });
   });
+
+  describe("getLargestAmount", () => {
+    it("should return the largest token amount in the array", async () => {
+      const reserveValues = Object.values(RESERVE_POOLS);
+      const amounts = [
+        { address: reserveValues[0].underlyer, amount: 10000n },
+        { address: reserveValues[1].underlyer, amount: 50000n },
+        { address: reserveValues[2].underlyer, amount: 40000n },
+      ];
+
+      const largestAmount = strategy.getLargestAmount(amounts);
+
+      const expectedLargestAmount = {
+        address: reserveValues[1].underlyer,
+        amount: 50000n,
+      };
+
+      expect(largestAmount).to.deep.equal(expectedLargestAmount);
+    });
+
+    it("should return the first amount if multiple amounts have the same largest amount value", async () => {
+      const reserveValues = Object.values(RESERVE_POOLS);
+      const amounts = [
+        { address: reserveValues[0].underlyer, amount: 10000n },
+        { address: reserveValues[1].underlyer, amount: 50000n },
+        { address: reserveValues[2].underlyer, amount: 50000n },
+      ];
+
+      const largestAmount = strategy.getLargestAmount(amounts);
+
+      const expectedLargestAmount = {
+        address: reserveValues[1].underlyer,
+        amount: 50000n,
+      };
+
+      expect(largestAmount).to.deep.equal(expectedLargestAmount);
+    });
+
+    it("should throw an error if the array of amounts is empty", async () => {
+      const reserveValues = Object.values(RESERVE_POOLS);
+      const amounts = [];
+      expect(() => strategy.getLargestAmount(amounts)).to.throw(RangeError);
+    });
+  });
 });
