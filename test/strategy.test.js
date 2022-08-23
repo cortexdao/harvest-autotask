@@ -16,7 +16,9 @@ const {
   ADMIN_SAFE_ADDRESS,
   THREEPOOL_STABLESWAP_ADDRESS,
   LP_ACCOUNT_ADDRESS,
+  DAI_ADDRESS,
   USDC_ADDRESS,
+  USDT_ADDRESS,
   RESERVE_POOLS,
 } = require("../src/common/constants");
 
@@ -219,6 +221,35 @@ describe("Index strategy", () => {
       const reserveValues = Object.values(RESERVE_POOLS);
       const amounts = [];
       expect(() => strategy.getLargestAmount(amounts)).to.throw(RangeError);
+    });
+  });
+
+  describe("getLargestNetExcess", () => {
+    it("should return the token amount with the largest net excess", async () => {
+      const reserveAddresses = Object.keys(RESERVE_POOLS);
+
+      const rebalanceAmounts = [
+        { address: reserveAddresses[0], amount: 100n * 10n ** 18n },
+        { address: reserveAddresses[1], amount: 100n * 10n ** 6n },
+        { address: reserveAddresses[2], amount: 100n * 10n ** 6n },
+      ];
+
+      const balances = {
+        [DAI_ADDRESS]: 50n * 10n ** 18n,
+        [USDC_ADDRESS]: 500n * 10n ** 6n,
+        [USDT_ADDRESS]: -100n * 10n ** 6n,
+      };
+
+      const largestNetExcess = await strategy.getLargestNetExcess(
+        rebalanceAmounts,
+        balances
+      );
+
+      const expectedLargestNetExcess = {
+        address: USDC_ADDRESS,
+        amount: 400n * 10n ** 18n,
+      };
+      expect(largestNetExcess).to.deep.equal(expectedLargestNetExcess);
     });
   });
 });
