@@ -10,20 +10,13 @@ const {
 
 const { Strategy } = require("../src/common/strategy");
 
-const { forceTransfer } = require("./utils");
 const {
   LP_SAFE_ADDRESS,
-  ADMIN_SAFE_ADDRESS,
-  THREEPOOL_STABLESWAP_ADDRESS,
-  LP_ACCOUNT_ADDRESS,
   DAI_ADDRESS,
   USDC_ADDRESS,
   USDT_ADDRESS,
   RESERVE_POOLS,
 } = require("../src/common/constants");
-
-const erc20Abi = require("../src/abis/ERC20.json");
-const poolTokenAbi = require("../src/abis/PoolTokenV3.json");
 
 use(chaiAsPromised);
 
