@@ -312,4 +312,35 @@ describe("Index strategy", () => {
       expect(nextBalanceAmount).to.deep.equal(expectedNextBalanceAmount);
     });
   });
+
+  describe("getTargetValues", () => {
+    it("should return the target values for each index position", () => {
+      const positions = [
+        { name: "convex-3pool", value: 100n },
+        { name: "convex-frax", value: 100n },
+        { name: "convex-fraxusdc", value: 100n },
+        { name: "convex-susdv2", value: 100n },
+        { name: "convex-mim", value: 100n },
+        { name: "convex-ironbank", value: 100n },
+        { name: "convex-busdv2", value: 100n },
+        { name: "convex-dola", value: 100n },
+        { name: "convex-musd", value: 100n },
+      ];
+
+      const targetValues = strategy.getTargetValues(positions);
+
+      const expectedTargetValues = {
+        "convex-3pool": 65n,
+        "convex-frax": 95n,
+        "convex-fraxusdc": 95n,
+        "convex-susdv2": 23n,
+        "convex-mim": 95n,
+        "convex-ironbank": 42n,
+        "convex-busdv2": 42n,
+        "convex-dola": 95n,
+        "convex-musd": 42n,
+      };
+      expect(targetValues).to.deep.equal(expectedTargetValues);
+    });
+  });
 });
