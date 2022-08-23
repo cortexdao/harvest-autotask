@@ -39,6 +39,10 @@ describe("Index strategy", () => {
     await snapshot.restore();
   });
 
+  afterEach(() => {
+    sinon.restore();
+  });
+
   before(async () => {
     [signer] = await ethers.getSigners();
   });
@@ -250,6 +254,62 @@ describe("Index strategy", () => {
         amount: 400n * 10n ** 18n,
       };
       expect(largestNetExcess).to.deep.equal(expectedLargestNetExcess);
+    });
+  });
+
+  describe("getNextBalanceAmount", () => {
+    it("should throw an Error if there are no reserves and balances in net excess", async () => {
+      const reserveAddresses = Object.keys(RESERVE_POOLS);
+
+      const rebalanceAmounts = [
+        { address: reserveAddresses[0], amount: 500n * 10n ** 18n },
+        { address: reserveAddresses[1], amount: 500n * 10n ** 6n },
+        { address: reserveAddresses[2], amount: 500n * 10n ** 6n },
+      ];
+      sinon.replace(strategy.mapt, "getRebalanceAmounts", () =>
+        Promise.resolve(rebalanceAmounts)
+      );
+
+      const balances = {
+        [DAI_ADDRESS]: 100n * 10n ** 18n,
+        [USDC_ADDRESS]: 100n * 10n ** 6n,
+        [USDT_ADDRESS]: 100n * 10n ** 6n,
+      };
+      sinon.replace(strategy.lpAccount, "getUnderlyerBalances", () =>
+        Promise.resolve(balances)
+      );
+
+      await expect(strategy.getNextBalanceAmount()).to.be.rejectedWith(Error);
+    });
+
+    it("should return the amount that can be added to an index position from the token that has the largest reserves in excess", async () => {
+      const reserveAddresses = Object.keys(RESERVE_POOLS);
+
+      const rebalanceAmounts = [
+        { address: reserveAddresses[0], amount: 100n * 10n ** 18n },
+        { address: reserveAddresses[1], amount: 100n * 10n ** 6n },
+        { address: reserveAddresses[2], amount: 100n * 10n ** 6n },
+      ];
+      sinon.replace(strategy.mapt, "getRebalanceAmounts", () =>
+        Promise.resolve(rebalanceAmounts)
+      );
+
+      const balances = {
+        [DAI_ADDRESS]: 50n * 10n ** 18n,
+        [USDC_ADDRESS]: 500n * 10n ** 6n,
+        [USDT_ADDRESS]: -100n * 10n ** 6n,
+      };
+      sinon.replace(strategy.lpAccount, "getUnderlyerBalances", () =>
+        Promise.resolve(balances)
+      );
+
+      const nextBalanceAmount = await strategy.getNextBalanceAmount();
+
+      const expectedNextBalanceAmount = {
+        address: USDC_ADDRESS,
+        amount: 500n * 10n ** 6n,
+      };
+      expect(nextBalanceAmount).to.deep.equal(expectedNextBalanceAmount);
     });
   });
 });
