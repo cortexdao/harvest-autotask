@@ -1,3 +1,4 @@
+const _ = require("lodash");
 const { ethers } = require("ethers");
 const coingecko = require("./coingecko");
 const {
@@ -39,9 +40,8 @@ exports.TvlManager = class {
   }
 
   async getAllocationTokenPrices(tokens) {
-    const uniqueTokenAddresses = [
-      ...new Set(tokens.flat().map(({ token }) => token)),
-    ];
+    const tokenAddresses = _.map(tokens.flat(), "token");
+    const uniqueTokenAddresses = [...new Set(tokenAddresses)];
 
     const tokenPriceResults = await coingecko.getTokenPrice(
       uniqueTokenAddresses
@@ -78,7 +78,7 @@ exports.TvlManager = class {
     const tokenValuePromises = tokens[i].map(getTokenValue);
     const tokenValues = await Promise.all(tokenValuePromises);
 
-    const value = tokenValues.reduce((a, b) => a + b);
+    const value = _.sum(tokenValues);
     const allocationName = await allocation.NAME();
 
     return { name: allocationName, value, tokens: tokens[i] };
@@ -100,11 +100,5 @@ exports.TvlManager = class {
     const positions = await Promise.all(positionPromises);
 
     return positions;
-  }
-
-  getNav(positions) {
-    const sumNav = (nav, { value }) => (nav += value);
-    const nav = positions.reduce(sumNav, 0n);
-    return nav;
   }
 };

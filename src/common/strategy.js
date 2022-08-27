@@ -1,3 +1,4 @@
+const _ = require("lodash");
 const { ethers } = require("ethers");
 
 const { MetaPoolToken } = require("./mapt");
@@ -27,23 +28,21 @@ exports.Strategy = class {
     this.tvlManager = new TvlManager(signer);
   }
 
-  getTargetValues(positions) {
-    const nav = this.tvlManager.getNav(positions);
+  getTargetValues(positions, targetWeights) {
+    const nav = _.sumBy(positions, "value");
 
     const getTargetValue = ({ name, weight }) => {
       const value = (weight * nav) / 10n ** WEIGHT_DECIMALS;
       return [name, value];
     };
 
-    const targetValueEntries = TARGET_WEIGHTS.map(getTargetValue);
+    const targetValueEntries = targetWeights.map(getTargetValue);
     const targetValues = Object.fromEntries(targetValueEntries);
 
     return targetValues;
   }
 
-  getPositionDeltas(positions) {
-    const targetValues = this.getTargetValues(positions);
-
+  getPositionDeltas(positions, targetValues) {
     const getDelta = ({ name, value }) => {
       const target = targetValues[name] || 0n;
       return { name, delta: target - value };
@@ -53,24 +52,16 @@ exports.Strategy = class {
     return positionDeltas;
   }
 
-  getLargestPositionDelta(positions) {
-    const positionDeltas = this.getPositionDeltas(positions);
-
-    const getLargerDelta = (largest, position) =>
-      position.delta > largest.delta ? position : largest;
-
-    const largestPositionDelta = positionDeltas.reduce(getLargerDelta);
-    return largestPositionDelta;
-  }
-
   async getNextPosition() {
     const positionNames = await this.lpAccount.getZapNames();
     const positions = await this.tvlManager.getIndexPositions(positionNames);
-    const largestPositionDelta = this.getLargestPositionDelta(positions);
 
-    const isPosition = ({ name }) => name === largestPositionDelta.name;
-    const positionValue = positions.find(isPosition).value;
-    const position = { name: largestPositionDelta.name, value: positionValue };
+    const targetValues = this.getTargetValues(positions, TARGET_WEIGHTS);
+
+    const positionDeltas = this.getPositionDeltas(positions, targetValues);
+    const largestDelta = _.maxBy(positionDeltas, "delta");
+
+    const position = _.find(positions, ["name", largestDelta.name]);
 
     return position;
   }
@@ -91,44 +82,32 @@ exports.Strategy = class {
     return filteredAmounts;
   }
 
-  getLargestAmount(normalizedAmounts) {
-    if (normalizedAmounts.length === 0) {
-      throw new RangeError("Unable to get largest amount from empty array");
-    }
-
-    const getLargerAmount = (largest, amount) =>
-      amount.amount > largest.amount ? amount : largest;
-    const largestAmount = normalizedAmounts.reduce(getLargerAmount);
-
-    return largestAmount;
-  }
-
-  async getLargestNetExcess(rebalanceAmounts, balances) {
-    const netExcessAmounts = this.getUnderlyersWithNetExcess(
-      rebalanceAmounts,
-      balances
-    );
-
+  async getLargestTokenAmount(tokenAmount) {
     const normalizedDecimals = 18n;
-    const normalizedExcessAmounts = await normalizeTokenAmounts(
-      netExcessAmounts,
+    const normalizedAmounts = await normalizeTokenAmounts(
+      tokenAmount,
       normalizedDecimals,
       this.signer
     );
 
-    const largestNetExcess = this.getLargestAmount(normalizedExcessAmounts);
+    // TODO: possible for this to return undefined
+    const largestAmount = _.maxBy(normalizedAmounts, "amount");
 
-    return largestNetExcess;
+    return largestAmount;
   }
 
   async getNextBalanceAmount() {
     const rebalanceAmounts = await this.mapt.getRebalanceAmounts();
     const balances = await this.lpAccount.getUnderlyerBalances();
 
-    let tokenAmount;
+    const netExcessAmounts = this.getUnderlyersWithNetExcess(
+      rebalanceAmounts,
+      balances
+    );
 
+    let tokenAmount;
     try {
-      tokenAmount = await this.getLargestNetExcess(rebalanceAmounts, balances);
+      tokenAmount = await this.getLargestTokenAmount(netExcessAmounts);
     } catch (error) {
       throw new Error(
         `Unable to get the next balance amount: ${error.message}`
@@ -164,33 +143,29 @@ exports.Strategy = class {
     return possibleNextValues;
   }
 
-  async getNextAddLiquidityValue(nextBalanceAmount, nextPosition) {
+  async getNextAddLiquidityTx() {
+    const errorMessage = "Unable to create tx to add liquidity";
+
+    let nextBalanceAmount;
+    try {
+      nextBalanceAmount = await this.getNextBalanceAmount();
+    } catch (error) {
+      throw new Error(`${errorMessage}: ${error.message}`);
+    }
+
+    let nextPosition;
+    try {
+      nextPosition = await this.getNextPosition();
+    } catch (error) {
+      throw new Error(`${errorMessage}: ${error.message}`);
+    }
+
     const possibleNextValues = await this.getPossibleNextAddLiquidityValues(
       nextBalanceAmount,
       nextPosition
     );
 
-    const getMinValue = (min, value) => (min < value ? min : value);
-    const addLiquidityValue = possibleNextValues.reduce(getMinValue);
-
-    return addLiquidityValue;
-  }
-
-  async getNextAddLiquidityTx() {
-    let nextBalanceAmount;
-
-    try {
-      nextBalanceAmount = await this.getNextBalanceAmount();
-    } catch (error) {
-      throw new Error(`Unable to create tx to add liquidity: ${error.message}`);
-    }
-
-    const nextPosition = await this.getNextPosition();
-
-    const addLiquidityValue = await this.getNextAddLiquidityValue(
-      nextBalanceAmount,
-      nextPosition
-    );
+    const addLiquidityValue = _.min(possibleNextValues);
 
     // Assume underlyer equals 1 USD
     const nextAddLiquidity = {

@@ -1,3 +1,4 @@
+const _ = require("lodash");
 const { ethers } = require("ethers");
 const coingecko = require("./coingecko");
 const { createTx } = require("./utils");
@@ -22,8 +23,7 @@ exports.LpAccount = class {
 
   async getUnderlyerBalances() {
     const reservePools = Object.values(RESERVE_POOLS);
-    const getUnderlyerAddress = ({ underlyer }) => underlyer;
-    const underlyerAddresses = reservePools.map(getUnderlyerAddress);
+    const underlyerAddresses = _.map(reservePools, "underlyer");
 
     const getTokenInstance = (address) =>
       new ethers.Contract(address, erc20Abi, this.signer);
@@ -82,9 +82,10 @@ exports.getZapNames = async (signer) => {
 };
 
 exports.getLpBalances = async (lpAccount, zapNames) => {
-  const lpBalances = await Promise.all(
-    zapNames.map((zap) => lpAccount.getLpTokenBalance(zap).catch(() => 0))
-  );
+  const getLpBalance = (zap) => lpAccount.getLpTokenBalance(zap).catch(() => 0);
+  const lpBalancePromises = zapNames.map(getLpBalance);
+  const lpBalances = await Promise.all(lpBalancePromises);
+
   const lpBalancesBigInt = lpBalances.map((balance) => BigInt(balance));
 
   return lpBalancesBigInt;

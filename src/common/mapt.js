@@ -1,3 +1,4 @@
+const _ = require("lodash");
 const { ethers } = require("ethers");
 const { createTx } = require("./utils");
 const {
@@ -54,25 +55,25 @@ exports.getRebalanceAmounts = async (signer) => {
   const mapt = new ethers.Contract(META_POOL_TOKEN_ADDRESS, maptAbi, signer);
   const result = await mapt.getRebalanceAmounts(RESERVE_POOL_IDS);
 
-  const rebalanceAmounts = result[0].map((address, i) => {
+  const getRebalanceAmount = (address, i) => {
     return { address, amount: result[1][i].toBigInt() };
-  });
+  };
+  const rebalanceAmounts = result[0].map(getRebalanceAmount);
 
   return rebalanceAmounts;
 };
 
 exports.normalizeRebalanceAmounts = (rebalanceAmounts) => {
-  const decimals = Object.values(RESERVE_POOLS).map(
-    ({ underlyerDecimals }) => underlyerDecimals
-  );
-  const normalizedDecimals = decimals.reduce((a, b) => (b > a ? b : a));
+  const decimals = _.map(Object.values(RESERVE_POOLS), "underlyerDecimals");
+  const normalizedDecimals = _.max(decimals);
 
-  const normalizedAmounts = rebalanceAmounts.map(({ address, amount }) => {
+  const normalizeAmount = ({ address, amount }) => {
     const { underlyerDecimals } = RESERVE_POOLS[address];
     const normalizedAmount =
       (amount * 10n ** normalizedDecimals) / 10n ** underlyerDecimals;
     return { address, amount: normalizedAmount };
-  });
+  };
+  const normalizedAmounts = rebalanceAmounts.map(normalizeAmount);
 
   return normalizedAmounts;
 };
