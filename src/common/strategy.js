@@ -43,12 +43,19 @@ exports.Strategy = class {
   }
 
   getPositionDeltas(positions, targetValues) {
-    const getDelta = ({ name, value }) => {
+    const getDelta = (name) => {
+      const current = _.find(positions, ["name", name]);
+      const value = current ? current.value : 0n;
       const target = targetValues[name] || 0n;
       return { name, delta: target - value };
     };
 
-    const positionDeltas = positions.map(getDelta);
+    const positionNames = _.map(positions, "name");
+    const targetNames = Object.keys(targetValues);
+    const uniqueNames = _.union(positionNames, targetNames);
+
+    const positionDeltas = uniqueNames.map(getDelta);
+
     return positionDeltas;
   }
 
