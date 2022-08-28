@@ -144,7 +144,7 @@ exports.Strategy = class {
       10n ** POSITION_ADD_PCT_DECIMALS;
 
     // Assume underlyer equals 1 USD
-    const maxNextBalanceValue = await convertTokenAmountDecimals(
+    const { amount: maxNextBalanceValue } = await convertTokenAmountDecimals(
       nextBalanceAmount,
       USD_DECIMALS,
       this.signer
