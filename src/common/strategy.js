@@ -66,9 +66,16 @@ exports.Strategy = class {
     const targetValues = this.getTargetValues(positions, TARGET_WEIGHTS);
 
     const positionDeltas = this.getPositionDeltas(positions, targetValues);
+
     const largestDelta = _.maxBy(positionDeltas, "delta");
 
-    const position = _.find(positions, ["name", largestDelta.name]);
+    let position;
+    try {
+      position = _.find(positions, ["name", largestDelta.name]);
+    } catch (error) {
+      const errorMessage = "Unable to get next position to add liquidity";
+      throw new Error(`${errorMessage}: ${error.message}`);
+    }
 
     return position;
   }
