@@ -11,7 +11,11 @@ const index = require("../src/autotasks/add-liquidity/index");
 const { main, handler } = index;
 const { LpAccount } = require("../src/common/lpaccount");
 
-const { addOwnerWithThreshold, forceTransfer } = require("./utils");
+const {
+  addOwnerWithThreshold,
+  forceTransfer,
+  setReservePercentage,
+} = require("./utils");
 const {
   ADMIN_SAFE_ADDRESS,
   THREEPOOL_STABLESWAP_ADDRESS,
@@ -36,21 +40,7 @@ describe("Add liquidity to index", () => {
   });
 
   beforeEach(async () => {
-    await impersonateAccount(ADMIN_SAFE_ADDRESS);
-    await setBalance(ADMIN_SAFE_ADDRESS, 10n ** 18n);
-    const adminSafeSigner = await ethers.getSigner(ADMIN_SAFE_ADDRESS);
-
-    const reserveAddresses = Object.keys(RESERVE_POOLS);
-    const getReserve = (address) =>
-      new ethers.Contract(address, poolTokenAbi, adminSafeSigner);
-    const reserves = reserveAddresses.map(getReserve);
-
-    const setReservePct = (reserve) => reserve.setReservePercentage(5);
-    const setReservePctPromises = reserves.map(setReservePct);
-
-    await Promise.all(setReservePctPromises);
-
-    await stopImpersonatingAccount(ADMIN_SAFE_ADDRESS);
+    await setReservePercentage(5);
   });
 
   beforeEach(async () => {
