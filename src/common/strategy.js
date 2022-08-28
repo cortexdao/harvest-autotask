@@ -29,7 +29,7 @@ exports.Strategy = class {
   }
 
   getTargetValues(positions, targetWeights) {
-    const nav = _.sumBy(positions, "value");
+    const nav = BigInt(_.sumBy(positions, "value"));
 
     const getTargetValue = ({ name, weight }) => {
       const value = (weight * nav) / 10n ** WEIGHT_DECIMALS;
