@@ -5,9 +5,14 @@ const {
   setBalance,
 } = require("@nomicfoundation/hardhat-network-helpers");
 
-const { LP_SAFE_ADDRESS } = require("../src/common/constants");
+const {
+  LP_SAFE_ADDRESS,
+  ADMIN_SAFE_ADDRESS,
+  RESERVE_POOLS,
+} = require("../src/common/constants");
 
 const safeAbi = require("../src/abis/GnosisSafe.json");
+const poolTokenAbi = require("../src/abis/PoolTokenV3.json");
 
 // Used to add an owner in tests
 exports.addOwnerWithThreshold = async (owner) => {
@@ -34,4 +39,22 @@ exports.forceTransfer = async (token, from, to, amount) => {
   await stopImpersonatingAccount(from);
 
   return tx;
+};
+
+exports.setReservePercentage = async (percentage) => {
+  await impersonateAccount(ADMIN_SAFE_ADDRESS);
+  await setBalance(ADMIN_SAFE_ADDRESS, 10n ** 18n);
+  const adminSafeSigner = await ethers.getSigner(ADMIN_SAFE_ADDRESS);
+
+  const reserveAddresses = Object.keys(RESERVE_POOLS);
+  const getReserve = (address) =>
+    new ethers.Contract(address, poolTokenAbi, adminSafeSigner);
+  const reserves = reserveAddresses.map(getReserve);
+
+  const setReservePct = (reserve) => reserve.setReservePercentage(percentage);
+  const setReservePctPromises = reserves.map(setReservePct);
+
+  await Promise.all(setReservePctPromises);
+
+  await stopImpersonatingAccount(ADMIN_SAFE_ADDRESS);
 };
