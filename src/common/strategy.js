@@ -77,6 +77,8 @@ exports.Strategy = class {
       throw new Error(`${errorMessage}: ${error.message}`);
     }
 
+    position = position || { name: largestDelta.name, value: 0n };
+
     return position;
   }
 
